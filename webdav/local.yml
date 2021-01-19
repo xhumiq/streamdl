@@ -1,0 +1,16 @@
+version: '3'
+services:
+  webdav:
+    container_name: webdav
+    image: webdav
+    environment:
+      MS_ENVIRONMENT: production
+      LOG_PATH: /var/log/webdav
+      HEBRON_PATH: /srv/media
+      JACOB_PATH: /srv/upload
+      API_PORT: 80
+    volumes:
+      - /ntc/ops/devops:/srv/media
+      - /ntc/go/elzion:/srv/upload
+    ports:
+      - 3001:80

@@ -1,6 +1,5 @@
 **/node_modules/*
 **/archive*
-**/log*
 **/logs*
 **/pids*
 **/.workspace_rc

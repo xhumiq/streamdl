@@ -39,7 +39,7 @@ ENV TIME_ZONE=Asia/Taipei
 ENV BUILDER_SRC_HOME /go/src/ntc
 
 #postgresql-client
-RUN apk --no-cache add tzdata ca-certificates && \
+RUN apk --no-cache add tzdata ca-certificates bind-tools && \
     cp /usr/share/zoneinfo/$TIME_ZONE /etc/localtime && \
     echo $TIME_ZONE > /etc/timezone && \
     rm -rf /var/cache/apk/*
