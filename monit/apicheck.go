@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
-	"nex.com/nelib/common"
+	"ntc.org/mclib/common"
 	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"nex.com/nelib/api"
-	"nex.com/nelib/microservice"
+	"ntc.org/mclib/api"
+	"ntc.org/mclib/microservice"
 )
 
 func getCheckClients(host string, services []*apiHealthCheckInfo) ([]*apiHealthCheck, error) {

@@ -4,9 +4,15 @@ import (
 	"ntc.org/mclib/nechi"
 )
 
-func NewApi(store *service) *nechi.WebChi {
-	sconfig := nechi.NewConfig(store.SvcConfig.Service.Port)
-	app := nechi.NewWebApp(&store.AppStatus, sconfig)
+func init() {
+	nechi.ServicePort = 4100
+}
+
+func NewIdApi(srv *service) *nechi.WebChi {
+	sconfig := srv.AppConfig.Http
+	app := nechi.NewWebApp(&srv.AppStatus, sconfig)
+	app.AddWebDav("", sconfig)
+
 	app.ApiHealth("/healthcheck", HealthCheck)
 	return app
 }

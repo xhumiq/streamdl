@@ -1,4 +1,4 @@
-module ntc.org/netutils/monit
+module ntc.org/netutils/webdav
 
 go 1.15
 

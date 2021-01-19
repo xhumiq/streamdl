@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"nex.com/nelib/common"
+	"ntc.org/mclib/common"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"nex.com/nelib/microservice"
+	"ntc.org/mclib/microservice"
 )
 
 type service struct {

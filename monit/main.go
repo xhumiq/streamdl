@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
-	"nex.com/nelib/microservice"
+	"ntc.org/mclib/microservice"
 )
 
 const (

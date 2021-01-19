@@ -3,25 +3,19 @@ package main
 import (
 	"ntc.org/mclib/common"
 	"ntc.org/mclib/microservice"
+	"ntc.org/mclib/netutils/bitbucket"
+	"ntc.org/mclib/netutils/sshutils"
 )
 
 type AppConfig struct {
-	Service microservice.ServiceConfig
-	Smtp    common.SmtpConfig
-	Log     common.LogConfig
-	Monitor struct {
-		Host       string `default:"localhost" env:"MONIT_DEFAULT_HOST" json:"MONIT_DEFAULT_HOST" yaml:"MONIT_DEFAULT_HOST"`
-		ConfigFile string `default:"monit.yml" env:"MONIT_CONFIG" json:"MONIT_CONFIG" yaml:"MONIT_CONFIG"`
-	}
+	Log       common.LogConfig
+	Hosts     sshutils.HostConfig
+	Bitbucket bitbucket.BitbucketConfig
 }
 
-func NewApp(name, display string) *microservice.App {
+func NewApp() *microservice.App {
 	config := AppConfig{}
 	app := microservice.NewApp(build, &secrets, &config)
-	if config.Service.Name == "" {
-		config.Service.Name = name
-	}
-	config.Service.DisplayName = display
 	return app
 }
 

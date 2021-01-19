@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"nex.com/nelib/api"
+	"ntc.org/mclib/api"
 )
 
 type NetApiHealthCheckResponse struct {
