@@ -8,6 +8,7 @@ require (
 	github.com/rs/zerolog v1.19.0
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/urfave/cli/v2 v2.1.1
+	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
 	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 	ntc.org/mclib/api v0.1.0

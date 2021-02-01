@@ -1,14 +1,14 @@
 package main
 
 import (
-	"encoding/json"
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
+	_ "golang.org/x/text/encoding"
+	_ "golang.org/x/text/encoding/traditionalchinese"
 	"io/ioutil"
 	"ntc.org/mclib/microservice"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 )
 
@@ -20,69 +20,69 @@ func main() {
 	app := NewApp()
 	name, addr, group, comments, path := "", "", "", "", ""
 	app.Cmd("imghref", func(c *cli.Context) error {
-		base := "/ntc/web/zion-org/"
-		exts := map[string]string{}
-		filepath.Walk(base, func(path string, info os.FileInfo, err error) error {
-			fpath := path
-			lpath := strings.ToLower(path)
-			if !strings.HasSuffix(lpath, "htm") && !strings.HasSuffix(lpath, "html") && !strings.HasSuffix(lpath, "css"){
+		base := "/ntc/web/zion-web/"
+		return walkPath(base, false)
+	}, &group, &comments, &path, &name, &addr)
+	app.Cmd("lowerext", func(c *cli.Context) error {
+		base := "/ntc/web/zion-web/"
+		filepath.Walk(base, func(fpath string, info os.FileInfo, err error) error {
+			if info.IsDir() || strings.Contains(fpath, ".git") {
 				return nil
 			}
-			lpath = lpath[len(base):]
-			lang := lpath[:2]
-			if lang != "zh" && lang != "en"{
+			file := filepath.Base(fpath)
+			fe := strings.Split(file,".")
+			if len(fe) < 2 || len(fe[len(fe)-1]) > 5{
 				return nil
 			}
-			path = path[len(base)+3:]
-			dir := filepath.Dir(path)
-			level := len(strings.Split(dir, "/"))
-			if dir == "."{
-				level = 0
-			}
-			file := filepath.Base(path)
-			if level  < 1{
-				return nil
-			}
-			if file != "prophet08_branding.css"{
-				//return nil
-			}
-			content, err := ioutil.ReadFile(fpath)
-			if err != nil{
-				return err
-			}
-			scnt := string(content)
-			ma := REImgHref.FindAllStringIndex(scnt, -1)
-			for _, m := range ma{
-				sm := scnt[m[0]:m[1]]
-				if !strings.Contains(sm, "images/"){
-					continue
+			ext := fe[len(fe)-1]
+			//			println(fe[len(fe)-1])
+			if strings.ToLower(ext) != ext{
+				df := fpath[:len(fpath)-len(ext)]+strings.ToLower(ext)
+				if err = os.Rename(fpath, df); err!=nil{
+					return err
 				}
-				smm := REImgHref.FindStringSubmatch(sm)
-				smi := smm[1]
-				if smi == ""{
-					smi = smm[2]
-				}
-				if strings.HasPrefix(smi, "80); opacity:0.8}"){
-					println("Hello")
-					println("!!!!", smi)
-				}
-				//smf := filepath.Base(smi[1])
-				//ext := strings.Split(smf,".")[1]
-				//exts[smi[1][:10]] = smi[1]
-				//println("Match", i, smf, ext)
-				pma := REParentDir.FindAllString(smi, -1)
-				pl := len(pma)
-				if level != pl{
-					println(fpath, smi)
-				}
-				//println("Level", level, smi)
+				println("File:", fpath, df)
 			}
 			return nil
 		})
-		b, _ := json.MarshalIndent(exts, "", "  ")
-		println(string(b))
 		return nil
-	}, &group, &comments, &path, &name, &addr)
+	})
+	app.Cmd("big5", func(c *cli.Context) error {
+		base := "/ntc/web/zion-web/"
+		filepath.Walk(base, func(path string, info os.FileInfo, err error) error {
+			if info.IsDir() || strings.Contains(path, ".git"){
+				return nil
+			}
+			//rel := path[len(base):]
+			se := strings.Split(path,".")
+			ext := strings.ToLower(se[len(se)-1])
+			if ext != "html" && ext != "htm"{
+				if ext == "mno" || ext == "jpg" || ext == "ogv" || ext == "flv" || ext == "mp4" || ext == "css" || ext == "swf" || ext == "htc" || ext == "js" || ext == "png" || ext == "psd" || ext == "gif" || ext == "scc" || ext == "zip" || ext == "pdf" || ext == "doc" || ext == "README"{
+					return nil
+				}
+				//println(ext, path)
+				return nil
+			}
+			content, err := ioutil.ReadFile(path)
+			if err!=nil{
+				return err
+			}
+			scnt := string(content)
+			if !strings.Contains(scnt, "charset=big5"){
+				return nil
+			}
+			buf, err := Decodebig5(content)
+			if err!=nil{
+				return err
+			}
+			scnt = string(buf)
+			scnt = strings.Replace(scnt, "charset=big5", "charset=utf-8", 1)
+			println("File:>", path, len(scnt))
+			ioutil.WriteFile(path, []byte(scnt), 0644)
+			return nil
+		})
+		return nil
+	})
 	err := app.Run(
 		microservice.RegisterShowVersion(func(app *microservice.App, evt *zerolog.Event) {
 			config  := app.Config.(*AppConfig)
@@ -91,8 +91,3 @@ func main() {
 		}))
 	checkError(err)
 }
-
-var (
-	REImgHref = regexp.MustCompile(`(?i)(?:=|url)(?:["(']?([^"&)']*?\.\w{2,4})["&)'])`)
-	REParentDir = regexp.MustCompile(`\.\./`)
-)

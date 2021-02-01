@@ -15,7 +15,7 @@ type AppConfig struct {
 
 func NewApp() *microservice.App {
 	config := AppConfig{}
-	app := microservice.NewApp(build, &secrets, &config)
+	app := microservice.NewApp(build, &secrets, &config, nil)
 	return app
 }
 

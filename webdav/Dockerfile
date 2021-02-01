@@ -42,7 +42,8 @@ ENV BUILDER_SRC_HOME /go/src/ntc
 RUN apk --no-cache add tzdata ca-certificates bind-tools && \
     cp /usr/share/zoneinfo/$TIME_ZONE /etc/localtime && \
     echo $TIME_ZONE > /etc/timezone && \
-    rm -rf /var/cache/apk/*
+    rm -rf /var/cache/apk/* && \
+    addgroup -S webdav --gid 1499 && adduser -S webdav --uid 1499 -G webdav -h /srv/media
 
 ENV API_PORT 4012
 
@@ -51,7 +52,7 @@ ENV VAULT_DOMAIN=ntc.org
 ENV VAULT_FOLLOWERS=https://vault2.00gps.net,https://vault3.00gps.net
 ENV VAULT_ENVIRONMENT=dev
 
-ENV LOG_FILE INV
+ENV LOG_FILE webdav
 ENV LOG_PATH "logs"
 
 COPY --from=builder /usr/lib/lib* /usr/lib/

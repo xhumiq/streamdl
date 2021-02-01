@@ -13,10 +13,10 @@ type AppConfig struct {
 	Http    nechi.Config
 	Users   struct{
 		HebronUser string `default:"hebron" env:"HEBRON_USER" json:"HEBRON_USER" yaml:"HEBRON_USER"`
-		HebronPwd string `default:"rhema" env:"HEBRON_PASSWD" json:"-" yaml:"-"`
+		HebronPwd string `default:"rhema" env:"HEBRON_BCRYPT" json:"-" yaml:"-"`
 		HebronPath string `default:"/srv/media/" env:"HEBRON_PATH" json:"HEBRON_PATH" yaml:"HEBRON_PATH"`
 		UploadUser string `default:"jacob" env:"JACOB_USER" json:"JACOB_USER" yaml:"JACOB_USER"`
-		UploadPwd string `default:"rhema" env:"JACOB_PASSWD" json:"-" yaml:"-"`
+		UploadPwd string `default:"rhema" env:"JACOB_BCRYPT" json:"-" yaml:"-"`
 		UploadPath string `default:"/srv/upload" env:"JACOB_PATH" json:"JACOB_PATH" yaml:"JACOB_PATH"`
 	}
 }

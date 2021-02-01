@@ -17,7 +17,7 @@ type AppConfig struct {
 
 func NewApp(name, display string) *microservice.App {
 	config := AppConfig{}
-	app := microservice.NewApp(build, &secrets, &config)
+	app := microservice.NewApp(build, &secrets, &config, nil)
 	if config.Service.Name == "" {
 		config.Service.Name = name
 	}

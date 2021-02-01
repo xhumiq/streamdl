@@ -14,6 +14,8 @@ const (
 func main() {
 	app := NewApp(appName, "WebDav Service")
 	err := app.Run(
+		//export HEBRON_PASSWD="*ChRisTKD~144^PeaCE=!"
+		//export JACOB_PASSWD="7=FH_^8hsZpg3yM^@Q==Sm/SN<rkr.7/"
 		microservice.RegisterShowVersion(func(app *microservice.App, evt *zerolog.Event) {
 			config := app.Config.(*AppConfig)
 			evt.Str("Hebron User", config.Users.HebronUser).

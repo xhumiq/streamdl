@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"github.com/kevinburke/ssh_config"
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
 	"ntc.org/mclib/netutils/bitbucket"
@@ -21,22 +19,68 @@ const (
 
 func main() {
 	app := NewApp()
-	name, addr, group, comments, path := "", "", "", "", ""
-	app.Cmd("set-ssh", func(c *cli.Context) error {
-		f, _ := os.Open(filepath.Join(os.Getenv("HOME"), ".ssh", "config"))
-		cfg, _ := ssh_config.Decode(f)
-		for _, host := range cfg.Hosts {
-			fmt.Println("patterns:", host.Patterns)
-			for _, node := range host.Nodes {
-				// Manipulate the nodes as you see fit, or use a type switch to
-				// distinguish between Empty, KV, and Include nodes.
-				fmt.Println(node.String())
+	name, addr, group, comments, path, user, key := "", "", "", "", "", "", ""
+	port := 0
+	app.Cmd("set-ssh [-k,--key <key>] [-p,--port <port>] [-c,--comments <comments>] <file> <name> <user> <addr>", func(c *cli.Context) error {
+		sc := app.Config.(*AppConfig)
+		cfg := sc.Hosts
+		if user == ""{
+			user = os.Getenv("USER")
+		}
+		if addr == ""{
+			addr = name
+		}
+		if path!="" && !common.FileExists(path) {
+			sc := filepath.Join(os.Getenv("HOME"), ".ssh", path)
+			if common.FileExists(sc) {
+				path = sc
+			}else {
+				sc := filepath.Join(os.Getenv("HOME"), ".ssh", path, "config")
+				if common.FileExists(sc) {
+					path = sc
+				}
+			}
+		}else if path == "" {
+			path = filepath.Join(os.Getenv("HOME"), ".ssh", "config")
+		}
+		cfile, err := sshutils.ParseSshConfigFile(path)
+		if err != nil{
+			return err
+		}
+		comments = strings.Trim(comments, " \t#")
+		if key==""{
+			key = "id_rsa"
+		}
+		if !common.FileExists(key){
+			bpath := filepath.Join(os.Getenv("HOME"), ".ssh")
+			if cfile.File != ""{
+				bpath = filepath.Dir(cfile.File)
+			}
+			sc := filepath.Join(bpath, key)
+			if common.FileExists(sc) {
+				key = sc
+			}else if bpath!= filepath.Join(os.Getenv("HOME"), ".ssh"){
+				sc = filepath.Join(filepath.Join(os.Getenv("HOME"), ".ssh"), key)
+				if common.FileExists(sc) {
+					key = sc
+				}
 			}
 		}
-		// Print the config to stdout:
-		fmt.Println(cfg.String())
+		cfg.Comments = strings.Trim(cfg.Comments, " \t#")
+		comments = common.FirstNotEmpty(comments, cfg.Comments)
+		cfile.SetEntry(sshutils.SshConfigEntry{
+			EntryName:    name,
+			Comments:     []string{comments},
+			HostName:     addr,
+			Port:         port,
+			User:         user,
+			IdentityFile: key,
+		})
+		if len(cfile.Entries) > 0{
+			sshutils.WriteConfigFile(path, cfile.Entries...)
+		}
 		return nil
-	}, &group, &comments, &path, &name, &addr)
+	}, &key, &port, &comments, &path, &name, &user, &addr)
 	host := "us.ziongjcc.org"
 	app.Cmd("bb-access <host>", func(c *cli.Context) error {
 		sc := app.Config.(*AppConfig)
@@ -92,13 +136,15 @@ func main() {
 		return err
 	}, &group, &comments, &path, &name, &addr)
 
-	app.Cmd("set-host [-g,--group <group>] [-c,--comments <comments>] [-r,--hostpath <host path>] <name> <addr>", func(c *cli.Context) error {
+	app.Cmd("set-host [-g,--group <group>] [-c,--comments <comments>] [-f,--hostpath <host path>] <name> <addr>", func(c *cli.Context) error {
 		sc := app.Config.(*AppConfig)
 		cfg := sc.Hosts
-		hosts, err := sshutils.ParseHostFile(&cfg.HostPath)
+		path = common.FirstNotEmpty(path, cfg.HostPath)
+		hosts, err := sshutils.ParseHostFile(&path)
 		if err!=nil{
 			return err
 		}
+		path = hosts.File
 		group = common.FirstNotEmpty(group, cfg.HostGroup)
 		addr = common.FirstNotEmpty(addr, cfg.IpAddr)
 		name = common.FirstNotEmpty(name, cfg.HostName)
@@ -107,15 +153,14 @@ func main() {
 		comments = common.FirstNotEmpty(comments, cfg.Comments)
 		path = common.FirstNotEmpty(path, cfg.HostPath)
 		//mapHosts, err := MapHostEntries(hosts, err)
-		hosts = sshutils.SetHostEntry(hosts, &sshutils.HostEntry{
+		hosts.Entries = sshutils.SetHostEntry(hosts.Entries, &sshutils.HostEntry{
 			Group:     group,
 			IpAddress: addr,
 			Names:     []string{name},
 			Comments:  []string{comments},
 		})
-		path = "/tmp/hosts-new"
-		if len(hosts) > 0{
-			sshutils.WriteHostFile(path, hosts...)
+		if len(hosts.Entries) > 0{
+			sshutils.WriteHostFile(path, hosts.Entries...)
 		}
 		return nil
 	}, &group, &comments, &path, &name, &addr)

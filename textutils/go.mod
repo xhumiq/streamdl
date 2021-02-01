@@ -6,6 +6,7 @@ require (
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351
 	github.com/rs/zerolog v1.19.0
 	github.com/urfave/cli/v2 v2.1.1
+	golang.org/x/text v0.3.3
 	ntc.org/mclib/auth v0.1.0
 	ntc.org/mclib/common v0.1.0
 	ntc.org/mclib/microservice v0.1.0
