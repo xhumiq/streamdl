@@ -1,8 +1,12 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
+	"gopkg.in/ini.v1"
 	"ntc.org/mclib/netutils/bitbucket"
 	"ntc.org/mclib/netutils/sshutils"
 	"os"
@@ -21,6 +25,58 @@ func main() {
 	app := NewApp()
 	name, addr, group, comments, path, user, key := "", "", "", "", "", "", ""
 	port := 0
+	app.Cmd("aws-cname <host> <ip>", func(c *cli.Context) error {
+		sc := app.Config.(*AppConfig)
+		aws := NewAWSRoute53(sc.Aws)
+		name = strings.Trim(name, "\"',:;. ")
+		path = strings.Trim(path, "\"',:;. ")
+		resp, err := aws.UpsertDomainRecord(dnsRequest{
+			Name:   name,
+			Target: path,
+			TTL:    60,
+			Weight: 255,
+		})
+		if err != nil{
+			return err
+		}
+		b, _ := json.MarshalIndent(resp, "", "  ")
+		println(string(b))
+		return nil
+	}, &name, &path)
+	app.Cmd("del-cname <host>", func(c *cli.Context) error {
+		sc := app.Config.(*AppConfig)
+		aws := NewAWSRoute53(sc.Aws)
+		name = strings.Trim(name, "\"',:;. ")
+		path = strings.Trim(path, "\"',:;. ")
+		resp, err := aws.DeleteDNSRecord(dnsRequest{Name:   name})
+		if err != nil{
+			return err
+		}
+		b, _ := json.MarshalIndent(resp, "", "  ")
+		println(string(b))
+		return nil
+	}, &name)
+	app.Cmd("ini <file> <value>", func(c *cli.Context) error {
+		cfg, err := ini.Load(path)
+		if err!=nil{
+			return err
+		}
+		names := strings.Split(name, ".")
+		if len(names) != 2{
+			return errors.Errorf("Name must be in this format section.value")
+		}
+		sect := cfg.Section(names[0])
+		if sect == nil{
+			return errors.Errorf("Section %s is not found", names[0])
+		}
+		value := sect.Key(names[1])
+		if value == nil{
+			return errors.Errorf("Section %s Value %s is not found", names[0], names[1])
+		}
+		fmt.Fprintf(os.Stdout, value.String() + "\n")
+		os.Stdout.Close()
+		return nil
+	}, &path, &name)
 	app.Cmd("set-ssh [-k,--key <key>] [-p,--port <port>] [-c,--comments <comments>] <file> <name> <user> <addr>", func(c *cli.Context) error {
 		sc := app.Config.(*AppConfig)
 		cfg := sc.Hosts

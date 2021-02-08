@@ -11,8 +11,9 @@ func init() {
 func NewIdApi(srv *service) *nechi.WebChi {
 	sconfig := srv.AppConfig.Http
 	app := nechi.NewWebApp(&srv.AppStatus, sconfig)
-	app.AddWebDav("", sconfig)
-
+	if  srv.SvcConfig.Monitor.AppMode != "MONITORONLY" {
+		app.AddWebDav(srv.SvcConfig.Monitor.DAVPrefix, sconfig)
+	}
 	app.ApiHealth("/healthcheck", HealthCheck)
 	return app
 }

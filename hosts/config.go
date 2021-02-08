@@ -11,6 +11,7 @@ type AppConfig struct {
 	Log       common.LogConfig
 	Hosts     sshutils.HostConfig
 	Bitbucket bitbucket.BitbucketConfig
+	Aws       common.AwsConfig
 }
 
 func NewApp() *microservice.App {

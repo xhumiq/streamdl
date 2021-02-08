@@ -7,19 +7,21 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.19.0
 	github.com/stretchr/testify v1.4.0 // indirect
+	github.com/studio-b12/gowebdav v0.0.0-20200929080739-bdacfab94796
 	github.com/urfave/cli/v2 v2.1.1
-	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
-	golang.org/x/net v0.0.0-20190827160401-ba9fcec4b297 // indirect
-	gopkg.in/yaml.v2 v2.3.0
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	ntc.org/mclib/api v0.1.0
+	ntc.org/mclib/auth/cognito v0.1.0
 	ntc.org/mclib/common v0.1.0
 	ntc.org/mclib/microservice v0.1.0
 	ntc.org/mclib/nechi v0.1.0
+	ntc.org/mclib/storage v0.1.0
 )
 
 replace (
 	ntc.org/mclib/api => ../../mclib/api
 	ntc.org/mclib/auth => ../../mclib/auth
+	ntc.org/mclib/auth/cognito => ../../mclib/auth/cognito
 	ntc.org/mclib/auth/providers => ../../mclib/auth/providers
 	ntc.org/mclib/common => ../../mclib/common
 	ntc.org/mclib/logger/email => ../../mclib/logger/email

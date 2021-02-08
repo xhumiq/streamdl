@@ -3,10 +3,11 @@ module ntc.org/netutils/hosts
 go 1.15
 
 require (
-	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351
+	github.com/aws/aws-sdk-go v1.37.6
+	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.19.0
 	github.com/urfave/cli/v2 v2.1.1
-	ntc.org/mclib/auth v0.1.0
+	gopkg.in/ini.v1 v1.62.0
 	ntc.org/mclib/common v0.1.0
 	ntc.org/mclib/microservice v0.1.0
 	ntc.org/mclib/netutils/bitbucket v0.0.0-00010101000000-000000000000
