@@ -1,7 +1,10 @@
 package main
 
 import (
+	"encoding/hex"
+	"ntc.org/mclib/auth"
 	"ntc.org/mclib/auth/cognito"
+	authvault "ntc.org/mclib/auth/vault"
 	"ntc.org/mclib/common"
 	"ntc.org/mclib/microservice"
 	"ntc.org/mclib/nechi"
@@ -13,11 +16,14 @@ type AppConfig struct {
 	Log     common.LogConfig
 	Http    nechi.Config
 	Cognito cognito.Config
+	Vault   struct{
+		authvault.VaultConfig
+	}
 	Monitor struct {
 		DAVPrefix  string `default:"" env:"WEBDAV_PREFIX" json:"WEBDAV_PREFIX" yaml:"WEBDAV_PREFIX"`
 		DurMins    int    `default:"10" env:"MON_DUR_MINS" json:"MON_DUR_MINS" yaml:"MON_DUR_MINS"`
 		AppMode    string `default:"" env:"WEBDAV_MODE" json:"WEBDAV_MODE" yaml:"WEBDAV_MODE"`
-		Domains    string `default:"upload-nw.ziongjcc.org" env:"MON_DOMAINS" json:"MON_DOMAINS" yaml:"MON_DOMAINS"`
+		Domains    string `default:"file-jp.ziongjcc.org" env:"MON_DOMAINS" json:"MON_DOMAINS" yaml:"MON_DOMAINS"`
 		VideoPath  string `default:"/Video" env:"MON_VIDEO_PATH" json:"MON_VIDEO_PATH" yaml:"MON_VIDEO_PATH"`
 		AudioPaths string `default:"/Audio/mp3mono,/Audio/mp3stereo" env:"MON_AUDIO_PATHS" json:"MON_AUDIO_PATHS" yaml:"MON_AUDIO_PATHS"`
 	}
@@ -44,20 +50,35 @@ func NewApp(name, display string) *microservice.App {
 		config.Service.Name = name
 	}
 	config.Service.DisplayName = display
+	env := config.Log.Environment
+	if config.Vault.Domain==""{
+		config.Vault.Domain = "ziongjcc.org"
+	}
+	config.Vault.Environment = authvault.GetEnv(config.Log, env, config.Vault.Environment)
+	if config.Vault.DefaultPolicy==""{
+		config.Vault.DefaultPolicy = "elzion"
+	}
 	config.Http.Users = []*nechi.UserProfile{
 		&nechi.UserProfile{
 			Username: config.Users.HebronUser,
 			Password: config.Users.HebronBCrypt,
 			Scope:    config.Users.HebronPath,
+			Groups:   []string{"hebron"},
 			Modify:   false,
 		},
 		&nechi.UserProfile{
 			Username: config.Users.UploadUser,
 			Password: config.Users.UploadBCrypt,
 			Scope:    config.Users.UploadPath,
+			Groups:   []string{"jacob"},
 			Modify:   true,
 		},
 	}
+	key, err := auth.HashToken(secrets.JwtSecret)
+	if err!=nil{
+		panic(err)
+	}
+	println("JwtSecret", hex.EncodeToString(key))
 	return app
 }
 

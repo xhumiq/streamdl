@@ -4,6 +4,7 @@ import (
 	"ntc.org/mclib/common"
 	"ntc.org/mclib/microservice"
 	"ntc.org/mclib/netutils/bitbucket"
+	"ntc.org/mclib/netutils/linode"
 	"ntc.org/mclib/netutils/sshutils"
 )
 
@@ -12,6 +13,7 @@ type AppConfig struct {
 	Hosts     sshutils.HostConfig
 	Bitbucket bitbucket.BitbucketConfig
 	Aws       common.AwsConfig
+	Linode    linode.LinodeConfig
 }
 
 func NewApp() *microservice.App {

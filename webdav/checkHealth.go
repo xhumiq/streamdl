@@ -39,7 +39,6 @@ func CheckHealth(url string, config *AppConfig) (res *webdavHealth, err error) {
 	if list, err = hc.Request().DavListDirFiles(config.Monitor.VideoPath); err != nil {
 		return
 	}
-	println("len", len(list))
 	for _, f := range list{
 		res.Videos = append(res.Videos, f.FullPath())
 	}

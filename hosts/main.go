@@ -1,16 +1,21 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/ini.v1"
+	"net"
 	"ntc.org/mclib/netutils/bitbucket"
+	"ntc.org/mclib/netutils/linode"
 	"ntc.org/mclib/netutils/sshutils"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"ntc.org/mclib/common"
@@ -74,9 +79,119 @@ func main() {
 			return errors.Errorf("Section %s Value %s is not found", names[0], names[1])
 		}
 		fmt.Fprintf(os.Stdout, value.String() + "\n")
-		os.Stdout.Close()
 		return nil
 	}, &path, &name)
+	both := false
+	app.Cmd("kh-rm [-f,--file <file>] [-b,--both <incPort22>] <name> <ip>", func(c *cli.Context) error {
+		//ips, err := net.LookupIP("google.com")
+		if path == ""{
+			path = filepath.Join(os.Getenv("HOME"), ".ssh", "known_hosts")
+		}
+		log.Info().Msgf("Load known_hosts file: %s", path)
+		kh, err := sshutils.LoadKnownHosts(path)
+		if err!=nil{
+			return err
+		}
+		host, port, err := net.SplitHostPort(name)
+		if err != nil {
+			host = name
+			port = "22"
+		}
+		lines := kh.Remove(host, port)
+		if len(lines) > 0{
+			for _, l := range lines{
+				fmt.Fprintf(os.Stdout, "Host: %s File: %s:%d\n", l.Matcher.String(), l.KnownKey.Filename, l.KnownKey.Line)
+			}
+		}else{
+			fmt.Fprintf(os.Stdout, "Host: %s not found\n", sshutils.Normalize(host + ":" + port))
+		}
+		if both && port != "22"{
+			lines := kh.Remove(host, "22")
+			if len(lines) > 0{
+				for _, l := range lines{
+					fmt.Fprintf(os.Stdout, "Host: %s File: %s:%d\n", l.Matcher.String(), l.KnownKey.Filename, l.KnownKey.Line)
+				}
+			}else{
+				fmt.Fprintf(os.Stdout, "Host: %s not found\n", host)
+			}
+		}
+		if addr != ""{
+			lines := kh.Remove(addr, port)
+			if len(lines) > 0{
+				for _, l := range lines{
+					fmt.Fprintf(os.Stdout, "Host: %s File: %s:%d\n", l.Matcher.String(), l.KnownKey.Filename, l.KnownKey.Line)
+				}
+			}else{
+				fmt.Fprintf(os.Stdout, "Host: %s not found\n", sshutils.Normalize(host + ":" + port))
+			}
+			if both && port != "22"{
+				lines := kh.Remove(addr, "22")
+				if len(lines) > 0{
+					for _, l := range lines{
+						fmt.Fprintf(os.Stdout, "Host: %s File: %s:%d\n", l.Matcher.String(), l.KnownKey.Filename, l.KnownKey.Line)
+					}
+				}else{
+					fmt.Fprintf(os.Stdout, "Host: %s not found\n", addr)
+				}
+			}
+		}else if !common.REIpAddress.MatchString(host){
+			if addrs, err := net.LookupHost(host); err == nil && len(addrs) > 0{
+				for _, a := range addrs {
+					lines := kh.Remove(a, port)
+					if len(lines) > 0{
+						for _, l := range lines{
+							fmt.Fprintf(os.Stdout, "Host: %s File: %s:%d\n", l.Matcher.String(), l.KnownKey.Filename, l.KnownKey.Line)
+						}
+					}else{
+						fmt.Fprintf(os.Stdout, "Host: %s:%s not found\n", a, port)
+					}
+					if both && port != "22"{
+						lines := kh.Remove(a, "22")
+						if len(lines) > 0{
+							for _, l := range lines{
+								fmt.Fprintf(os.Stdout, "Host: %s File: %s:%d\n", l.Matcher.String(), l.KnownKey.Filename, l.KnownKey.Line)
+							}
+						}else{
+							fmt.Fprintf(os.Stdout, "Host: %s not found\n", a)
+						}
+					}
+				}
+			}
+		}
+		if kh.Removed() > 0{
+			f, err := os.Create(path)
+			if err!=nil{
+				return err
+			}
+			defer f.Close()
+			log.Info().Msgf("Rewrite known_hosts file: %s", path)
+			w := bufio.NewWriter(f)
+			for _, l := range kh.Lines(){
+				_, err := w.WriteString(l.String() + "\n")
+				if err!=nil{
+					return err
+				}
+			}
+			w.Flush()
+		}
+		return nil
+	}, &path, &both, &name, &addr)
+	app.Cmd("linode-reboot <name>", func(c *cli.Context) error {
+		sc := app.Config.(*AppConfig)
+		lc, err := linode.NewLinodeClient(sc.Linode.ApiToken, sc.Linode)
+		if err!=nil{
+			return err
+		}
+		resp, err := lc.InstanceByLabel(name)
+		if err!=nil{
+			return err
+		}
+		_, err = lc.RebootInstance(strconv.Itoa(resp.ID))
+		if err!=nil{
+			return err
+		}
+		return nil
+	}, &name)
 	app.Cmd("set-ssh [-k,--key <key>] [-p,--port <port>] [-c,--comments <comments>] <file> <name> <user> <addr>", func(c *cli.Context) error {
 		sc := app.Config.(*AppConfig)
 		cfg := sc.Hosts

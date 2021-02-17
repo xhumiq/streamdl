@@ -10,7 +10,8 @@ require (
 	gopkg.in/ini.v1 v1.62.0
 	ntc.org/mclib/common v0.1.0
 	ntc.org/mclib/microservice v0.1.0
-	ntc.org/mclib/netutils/bitbucket v0.0.0-00010101000000-000000000000
+	ntc.org/mclib/netutils/bitbucket v0.1.0
+	ntc.org/mclib/netutils/linode v0.1.0
 	ntc.org/mclib/netutils/sshutils v0.1.0
 )
 
@@ -26,6 +27,7 @@ replace (
 	ntc.org/mclib/microservice => ../../mclib/microservice
 	ntc.org/mclib/nechi => ../../mclib/nechi
 	ntc.org/mclib/netutils/bitbucket => ../../mclib/netutils/bitbucket
+	ntc.org/mclib/netutils/linode => ../../mclib/netutils/linode
 	ntc.org/mclib/netutils/sshutils => ../../mclib/netutils/sshutils
 	ntc.org/mclib/storage => ../../mclib/storage
 	ntc.org/mclib/storage/redis => ../../mclib/storage/redis

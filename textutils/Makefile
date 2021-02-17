@@ -12,7 +12,7 @@ CGO_ENABLED = 0
 all: build
 
 build:
-	go build -ldflags ${BUILD_FLAGS} -o ${BUILD_PATH}/hosts
+	go build -ldflags ${BUILD_FLAGS} -o ${BUILD_PATH}/text
 
 install:
-	sudo cp ${BUILD_PATH}/hosts /usr/local/bin
+	sudo cp ${BUILD_PATH}/text /usr/local/bin

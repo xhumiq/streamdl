@@ -3,9 +3,12 @@ FROM golang:1.13-alpine3.11 as builder
 
 ARG SOURCE_COMMIT=idauth
 ARG SOURCE_TAG=0.0.0
+ARG COMMIT_MSG=""
 ARG BUILD_VERSION=0.0.0
 ARG BUILD_TIME=MISSING
 ARG BRANCH=missing
+ARG PROJ_SQL_PWD=""
+ARG PROJ_SMTP_PWD=""
 
 ENV TIME_ZONE=Asia/Taipei
 ENV GO111MODULE=on
@@ -24,7 +27,7 @@ COPY ./mclib ./mclib
 WORKDIR $SRC_HOME/netutils/webdav
 
 RUN export BUILD_TIME=`date '+%F_%H:%M:%S'` && \
-    export BUILD_FLAGS="-s -X main.version=$BUILD_VERSION -X main.gitHash=$SOURCE_COMMIT -X main.branch=$BRANCH -X main.buildStamp=$BUILD_TIME" && \
+    export BUILD_FLAGS="-s -X main.version=$BUILD_VERSION -X main.sourceTag=$SOURCE_TAG -X 'main.commitMsg=${COMMIT_MSG}' -X main.gitHash=$SOURCE_COMMIT -X main.branch=$BRANCH -X main.buildStamp=$BUILD_TIME -X 'main.sqlPwd=${PROJ_SQL_PWD}' -X 'main.smtpPwd=${PROJ_SMTP_PWD}'" && \
     echo $BUILD_FLAGS && \
     CGO_ENABLED=0 GOOS=linux go build -ldflags "$BUILD_FLAGS" -a -installsuffix cgo -o webdav
 

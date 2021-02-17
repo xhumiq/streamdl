@@ -11,7 +11,9 @@ require (
 	github.com/urfave/cli/v2 v2.1.1
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	ntc.org/mclib/api v0.1.0
+	ntc.org/mclib/auth v0.1.0
 	ntc.org/mclib/auth/cognito v0.1.0
+	ntc.org/mclib/auth/vault v0.1.0
 	ntc.org/mclib/common v0.1.0
 	ntc.org/mclib/microservice v0.1.0
 	ntc.org/mclib/nechi v0.1.0
@@ -23,6 +25,7 @@ replace (
 	ntc.org/mclib/auth => ../../mclib/auth
 	ntc.org/mclib/auth/cognito => ../../mclib/auth/cognito
 	ntc.org/mclib/auth/providers => ../../mclib/auth/providers
+	ntc.org/mclib/auth/vault => ../../mclib/auth/vault
 	ntc.org/mclib/common => ../../mclib/common
 	ntc.org/mclib/logger/email => ../../mclib/logger/email
 	ntc.org/mclib/logger/models => ../../mclib/logger/models

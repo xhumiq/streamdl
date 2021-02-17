@@ -3,9 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"ntc.org/mclib/auth/cognito"
+	authvault "ntc.org/mclib/auth/vault"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/judwhite/go-svc/svc"
 	"github.com/rs/zerolog"
@@ -21,18 +22,66 @@ const (
 
 func main() {
 	app := NewApp(appName, "WebDav Service")
+	app.Cmd("elzion", func(c *cli.Context) error {
+		svc := NewService(app)
+		env := svc.SvcConfig.Log.Environment
+		env = authvault.GetEnv(svc.SvcConfig.Log, env, svc.SvcConfig.Vault.Environment)
+		t1 := time.Now()
+		for i := 0;i < 10;i++{
+			ezUsers := make(map[string]string)
+			_, err := svc.vault.GetConnectionVars(env, "elzion", &ezUsers, "webdav")
+			if err != nil{
+				return err
+			}
+			b, _ := json.MarshalIndent(ezUsers, "", "  ")
+			println(string(b))
+			break
+		}
+		println(time.Now().Sub(t1).String())
+		return nil
+	})
+	env, domain, policy, token, name := "", "", "", "", ""
+	app.Cmd("token [-e,--env <env>] [-d,--domain <domain>] [-p,--policy <policy>] [-t,--token <token>] <name>", func(c *cli.Context) error {
+		svc := NewService(app)
+		env = authvault.GetEnv(svc.SvcConfig.Log, env, svc.SvcConfig.Vault.Environment)
+		if token != ""{
+			svc.SvcConfig.Vault.Token = token
+		}
+		if domain == ""{
+			domain = "ziongjcc.org"
+		}
+		if policy == ""{
+			policy = svc.SvcConfig.Vault.DefaultPolicy
+		}
+		if policy == ""{
+			policy = "elzion"
+		}
+		if name == ""{
+			name = "webdav"
+		}
+		return svc.vault.CreateServiceToken(env, domain, policy, name)
+	}, &env, &domain, &policy, &token, &name)
 	app.Cmd("login", func(c *cli.Context) error {
-		config := app.Config.(*AppConfig)
-		client, err := cognito.CreateProvider(config.Cognito)
-		if err!=nil{
-			return err
+		svc := NewService(app)
+		env := svc.SvcConfig.Log.Environment
+		env = authvault.GetEnv(svc.SvcConfig.Log, env, svc.SvcConfig.Vault.Environment)
+		t1 := time.Now()
+		//UNNSA~O.980
+		for i := 0;i < 10;i++{
+			res, err := svc.vault.UserPassLogin(env, "ziongjcc.org", "UNNSA~O.980", "*ChRisTKD~144^PeaCE=!")
+			if err != nil{
+				return err
+			}
+			if res == nil{
+				continue
+			}
+			md, _ := res.Auth.MetaData.(*authvault.AuthIdentity)
+			if md!=nil{
+				println(md.Scope)
+			}
+			break
 		}
-		res, err := cognito.Login(client, config.Cognito, "", "")
-		if err!=nil{
-			return err
-		}
-		b, _ := json.MarshalIndent(res, "", "  ")
-		println(string(b))
+		println(time.Now().Sub(t1).String())
 		return nil
 	})
 	app.Cmd("webdav", func(c *cli.Context) error {
@@ -76,10 +125,10 @@ func main() {
 	err := app.Run(
 		microservice.RegisterShowVersion(func(app *microservice.App, evt *zerolog.Event) {
 			config := app.Config.(*AppConfig)
-			evt = evt.Str("User Hebron User", config.Users.HebronUser).
-				Str("User Hebron Path", config.Users.HebronPath).
-				Str("User Upload User", config.Users.UploadUser).
-				Str("User Upload Path", config.Users.UploadPath).
+			evt = evt.Str("User Hebron Usr", config.Users.HebronUser).
+				Str("User Hebron Pth", config.Users.HebronPath).
+				Str("User Upload Usr", config.Users.UploadUser).
+				Str("User Upload Pth", config.Users.UploadPath).
 				Str("AC A RegionId", config.Cognito.RegionID).
 				Str("AC B   PoolId", config.Cognito.UserPoolID).
 				Str("AC C ClientId", config.Cognito.AppClientID).
@@ -105,6 +154,13 @@ func main() {
 			mode := config.Monitor.AppMode
 			if mode == "" {
 				mode = "WebDav and Monitor"
+			}
+			if config.Vault.Address != ""{
+				evt = evt.Str("Vault Environ", config.Log.Environment).
+					Str("Vault   Token", common.MaskedSecret(config.Vault.Token)).
+					Str("Vault Address", config.Vault.Address).
+					Str("Vault  Domain", config.Vault.Domain).
+					Str("Vault  Secret", common.MaskedSecret(secrets.JwtSecret))
 			}
 			evt.Msgf("WebDav: %s Mode: %s", build.Version, mode)
 		}),

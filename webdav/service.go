@@ -4,6 +4,8 @@ import (
 	"strings"
 	"time"
 
+	authvault "ntc.org/mclib/auth/vault"
+
 	"github.com/rs/zerolog/log"
 
 	"ntc.org/mclib/common"
@@ -18,14 +20,19 @@ type service struct {
 	chProc      chan (time.Time)
 	lastResults map[string]*webdavHealth
 	lastCheck   time.Time
+	vault       *authvault.VaultClient
 }
 
 func NewService(app *microservice.App) *service {
+	config := app.Config.(*AppConfig)
+	client, err := authvault.NewVaultClient(config.Vault.VaultConfig, &config.Log)
+	checkError(err)
 	return &service{
 		App:         app,
 		SvcConfig:   app.Config.(*AppConfig),
 		lastResults: make(map[string]*webdavHealth),
 		chProc:      make(chan (time.Time), 10),
+		vault:       client,
 	}
 }
 
