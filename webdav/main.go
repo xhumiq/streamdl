@@ -42,24 +42,9 @@ func main() {
 	})
 	env, domain, policy, token, name := "", "", "", "", ""
 	app.Cmd("token [-e,--env <env>] [-d,--domain <domain>] [-p,--policy <policy>] [-t,--token <token>] <name>", func(c *cli.Context) error {
-		svc := NewService(app)
-		env = authvault.GetEnv(svc.SvcConfig.Log, env, svc.SvcConfig.Vault.Environment)
-		if token != ""{
-			svc.SvcConfig.Vault.Token = token
-		}
-		if domain == ""{
-			domain = "ziongjcc.org"
-		}
-		if policy == ""{
-			policy = svc.SvcConfig.Vault.DefaultPolicy
-		}
-		if policy == ""{
-			policy = "elzion"
-		}
-		if name == ""{
-			name = "webdav"
-		}
-		return svc.vault.CreateServiceToken(env, domain, policy, name)
+		config := app.Config.(*AppConfig)
+		_, err := RegisterToken(config, env, domain, name)
+		return err
 	}, &env, &domain, &policy, &token, &name)
 	app.Cmd("login", func(c *cli.Context) error {
 		svc := NewService(app)
@@ -160,7 +145,8 @@ func main() {
 					Str("Vault   Token", common.MaskedSecret(config.Vault.Token)).
 					Str("Vault Address", config.Vault.Address).
 					Str("Vault  Domain", config.Vault.Domain).
-					Str("Vault  Secret", common.MaskedSecret(secrets.JwtSecret))
+					Str("Vault  Secret", common.MaskedSecret(config.Vault.CfgEncSecret)).
+					Str("Vault CfgPath", config.Vault.ConfigPath)
 			}
 			evt.Msgf("WebDav: %s Mode: %s", build.Version, mode)
 		}),

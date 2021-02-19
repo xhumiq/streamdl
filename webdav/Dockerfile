@@ -27,9 +27,10 @@ COPY ./mclib ./mclib
 WORKDIR $SRC_HOME/netutils/webdav
 
 RUN export BUILD_TIME=`date '+%F_%H:%M:%S'` && \
-    export BUILD_FLAGS="-s -X main.version=$BUILD_VERSION -X main.sourceTag=$SOURCE_TAG -X 'main.commitMsg=${COMMIT_MSG}' -X main.gitHash=$SOURCE_COMMIT -X main.branch=$BRANCH -X main.buildStamp=$BUILD_TIME -X 'main.sqlPwd=${PROJ_SQL_PWD}' -X 'main.smtpPwd=${PROJ_SMTP_PWD}'" && \
+    export JWT_SECRET=$( < /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c${1:-24};echo; ) && \
+    export BUILD_FLAGS="-s -X main.version=${BUILD_VERSION} -X main.sourceTag=${SOURCE_TAG} -X 'main.commitMsg=${COMMIT_MSG}' -X main.gitHash=${SOURCE_COMMIT} -X main.branch=${BRANCH} -X main.buildStamp=${BUILD_TIME}" && \
     echo $BUILD_FLAGS && \
-    CGO_ENABLED=0 GOOS=linux go build -ldflags "$BUILD_FLAGS" -a -installsuffix cgo -o webdav
+    CGO_ENABLED=0 GOOS=linux go build -ldflags "${BUILD_FLAGS} -X 'main.awsKey=${AWS_SECRET_ACCESS_KEY}' -X 'main.sqlPwd=${PROJ_SQL_PWD}' -X 'main.smtpPwd=${PROJ_SMTP_PWD}' -X 'main.jwtSecret=${JWT_SECRET}'" -a -installsuffix cgo -o webdav
 
 FROM alpine:3.9
 
@@ -53,7 +54,10 @@ ENV API_PORT 4012
 ENV VAULT_ADDR="https://vault1.00gps.net:8200"
 ENV VAULT_DOMAIN=ntc.org
 ENV VAULT_FOLLOWERS=https://vault2.00gps.net,https://vault3.00gps.net
-ENV VAULT_ENVIRONMENT=dev
+ENV VAULT_REG_TOKEN=""
+ENV MS_ENVIRONMENT=dev
+ENV WEBDAV_MODE=FULLSERVICE
+ENV SVC_NAME=file-us
 
 ENV LOG_FILE webdav
 ENV LOG_PATH "logs"

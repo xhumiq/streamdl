@@ -5,10 +5,12 @@ BUILD_VERSION=$(shell bv=${SOURCE_TAG} && echo $${bv:1:50})
 BRANCH = $(shell git for-each-ref --format='%(objectname) %(refname:short)' refs/heads | awk "/^$$(git rev-parse HEAD)/ {print \$$2}")
 COMMIT_MSG = $(shell echo "$$(git log -1 HEAD --pretty=format:%s)" | sed -e 's/'\''/"/g')
 BUILD_TIME = $(shell date "+%F_%H:%M:%S")
-JWT_SECRET = $(shell < /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c$${1:-24};echo;)
+#JWT_SECRET = $(shell < /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c$${1:-24};echo;)
+JWT_SECRET = TEST_JWT_SECRET
 BUILD_PATH = /ntc/builds/net
 BUILD_FLAGS = "-s -X main.version=${BUILD_VERSION} -X main.sourceTag=${SOURCE_TAG} -X 'main.commitMsg=${COMMIT_MSG}' -X main.gitHash=${SOURCE_COMMIT} -X 'main.branch=${BRANCH}' -X main.buildStamp=${BUILD_TIME} -X 'main.awsKey=${AWS_SECRET_ACCESS_KEY}' -X 'main.sqlPwd=${PROJ_SQL_PWD}' -X 'main.smtpPwd=${PROJ_SMTP_PWD}' -X 'main.jwtSecret=${JWT_SECRET}'"
 docker_reg = ${AWS_DOCKER_REG}
+registrator_token = $(shell vcli token -e dev reg)
 dkname = webdav
 
 AWS_PROFILE = gjcc
@@ -16,21 +18,26 @@ pwd = $(shell aws ecr get-login-password --region ap-northeast-1)
 
 all: build
 
-aws_push: aws_login docker_build tag push
+ecr_push: docker_build tag aws_login push
 
 build:
 	@export CGO_ENABLED=0 && go build -ldflags ${BUILD_FLAGS} -o ${BUILD_PATH}/webdav
 
-docker_build:
-	cp ./docker.ignore ../../.dockerignore
-	cd ../../ && \
+docker_build: docker_loc_build
+
+docker_loc_build:
+	@cp ./docker.ignore ../../.dockerignore
+	@cd ../../ && \
 	docker build . --file ${ROOT_DIR}/Dockerfile -t ${dkname}:${BUILD_VERSION} \
 		--build-arg BRANCH=${BRANCH} \
 		--build-arg SOURCE_TAG=${SOURCE_TAG} \
 		--build-arg SOURCE_COMMIT=${SOURCE_COMMIT} \
-		--build-arg COMMIT_MSG='${COMMIT_MSG}'' \
+		--build-arg COMMIT_MSG='${COMMIT_MSG}' \
 		--build-arg BUILD_VERSION=${BUILD_VERSION} \
-		--build-arg BUILD_TIME=${BUILD_TIME} && \
+		--build-arg BUILD_TIME=${BUILD_TIME} \
+		--build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+		--build-arg PROJ_SQL_PWD=${PROJ_SQL_PWD} \
+		--build-arg PROJ_SMTP_PWD=${PROJ_SMTP_PWD} && \
 		docker tag ${dkname}:${BUILD_VERSION} ${dkname}:latest && \
 		docker tag ${dkname}:$(BUILD_VERSION) ${dkname} && \
 		echo Set ${dkname}:$(BUILD_VERSION) to latest && \
@@ -51,3 +58,6 @@ tag:
 push:
 	docker push ${docker_reg}/${dkname}:${BUILD_VERSION}
 	docker push ${docker_reg}/${dkname}:latest
+
+install:
+	sudo cp ${BUILD_PATH}/webdav /usr/local/bin

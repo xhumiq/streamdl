@@ -1,13 +1,12 @@
 package main
 
 import (
-	"encoding/hex"
-	"ntc.org/mclib/auth"
 	"ntc.org/mclib/auth/cognito"
 	authvault "ntc.org/mclib/auth/vault"
 	"ntc.org/mclib/common"
 	"ntc.org/mclib/microservice"
 	"ntc.org/mclib/nechi"
+	"path/filepath"
 )
 
 type AppConfig struct {
@@ -50,13 +49,18 @@ func NewApp(name, display string) *microservice.App {
 		config.Service.Name = name
 	}
 	config.Service.DisplayName = display
-	env := config.Log.Environment
 	if config.Vault.Domain==""{
 		config.Vault.Domain = "ziongjcc.org"
 	}
-	config.Vault.Environment = authvault.GetEnv(config.Log, env, config.Vault.Environment)
 	if config.Vault.DefaultPolicy==""{
 		config.Vault.DefaultPolicy = "elzion"
+	}
+	if config.Vault.HostName == ""{
+		config.Vault.HostName = config.Service.Name
+	}
+	authvault.InitConfig(&config.Vault.VaultConfig, config.Log, config.Log.Environment, secrets.JwtSecret, filepath.Dir(build.ExeBinPath))
+	if config.Vault.RegToken != "" && len(config.Vault.Credentials()) < 1{
+		RegisterToken(&config, config.Log.Environment, "ziongjcc.org", name)
 	}
 	config.Http.Users = []*nechi.UserProfile{
 		&nechi.UserProfile{
@@ -74,11 +78,6 @@ func NewApp(name, display string) *microservice.App {
 			Modify:   true,
 		},
 	}
-	key, err := auth.HashToken(secrets.JwtSecret)
-	if err!=nil{
-		panic(err)
-	}
-	println("JwtSecret", hex.EncodeToString(key))
 	return app
 }
 
