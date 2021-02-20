@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+	"github.com/rs/zerolog/log"
 	"ntc.org/mclib/auth/cognito"
 	authvault "ntc.org/mclib/auth/vault"
 	"ntc.org/mclib/common"
@@ -60,7 +62,9 @@ func NewApp(name, display string) *microservice.App {
 	}
 	authvault.InitConfig(&config.Vault.VaultConfig, config.Log, config.Log.Environment, secrets.JwtSecret, filepath.Dir(build.ExeBinPath))
 	if config.Vault.RegToken != "" && len(config.Vault.Credentials()) < 1{
-		RegisterToken(&config, config.Log.Environment, "ziongjcc.org", name)
+		if _, err := RegisterToken(&config, config.Log.Environment, "ziongjcc.org", name); err!=nil{
+			log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to register token")
+		}
 	}
 	config.Http.Users = []*nechi.UserProfile{
 		&nechi.UserProfile{

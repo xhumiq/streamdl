@@ -51,10 +51,16 @@ RUN apk --no-cache add tzdata ca-certificates bind-tools && \
 
 ENV API_PORT 4012
 
-ENV VAULT_ADDR="https://vault1.00gps.net:8200"
-ENV VAULT_DOMAIN=ntc.org
-ENV VAULT_FOLLOWERS=https://vault2.00gps.net,https://vault3.00gps.net
+ENV VAULT_ADDR="https://ops1-1.ziongjcc.org:8200"
+ENV VAULT_DOMAIN=ziongjcc.org
+ENV VAULT_FOLLOWERS="https://ops1-2.ziongjcc.org:8200,https://ops1-3.ziongjcc.org:8200"
 ENV VAULT_REG_TOKEN=""
+ENV HEBRON_PATH /srv/media
+ENV HEBRON_USER "hebron"
+ENV HEBRON_PASSWD rhema
+ENV JACOB_PATH /srv/upload
+ENV JACOB_USER "jacob"
+ENV JACOB_PASSWD rhema
 ENV MS_ENVIRONMENT=dev
 ENV WEBDAV_MODE=FULLSERVICE
 ENV SVC_NAME=file-us

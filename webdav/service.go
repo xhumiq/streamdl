@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/hex"
+	"fmt"
 	"strings"
 	"time"
 
@@ -64,6 +65,7 @@ func RegisterToken(config *AppConfig, env, domain, name string) (*authvault.Crea
 	}
 	token, err := client.CreateServiceToken(env, domain, "elzion", name)
 	if err != nil{
+		log.Error().Str("Error",fmt.Sprintf("%+v", err)).Msgf("Create Service Token")
 		return nil, err
 	}
 	if token.ClientToken == "" {
@@ -75,6 +77,7 @@ func RegisterToken(config *AppConfig, env, domain, name string) (*authvault.Crea
 	if err != nil {
 		return nil, err
 	}
+	println("Save Vault Credentials")
 	credentials := authvault.LocalCredentials{}
 	credentials["_"] = authvault.LocalCredentialEntry{
 		Token: token.ClientToken,

@@ -83,41 +83,27 @@ func main() {
 		wg.Wait()
 		return nil
 	})
-	app.Cmd("pwd", func(c *cli.Context) error {
+	pwd := ""
+	app.Cmd("pwd <pwd>", func(c *cli.Context) error {
 		var bpwd []byte
 		var err error
-		hpwd, ok := os.LookupEnv("HEBRON_PASSWD")
-		if !ok {
-			return fmt.Errorf("Vars HEBRON_PASSWD and JACOB_PASSWD must be set")
-		}
-		if bpwd, err = bcrypt.GenerateFromPassword([]byte(hpwd), 5); err != nil {
-			return err
-		}
-		if len(bpwd) > 0 {
-			println(string(bpwd))
-		}
-		if hpwd, ok = os.LookupEnv("JACOB_PASSWD"); !ok {
-			return fmt.Errorf("Vars HEBRON_PASSWD and JACOB_PASSWD must be set")
-		}
-		if bpwd, err = bcrypt.GenerateFromPassword([]byte(hpwd), 5); err != nil {
-			return err
-		}
-		if len(bpwd) > 0 {
-			println(string(bpwd))
+		if len(pwd) > 0{
+			if bpwd, err = bcrypt.GenerateFromPassword([]byte(pwd), 5); err != nil {
+				return err
+			}
+			if len(bpwd) > 0 {
+				fmt.Fprintf(os.Stdout, string(bpwd) + "\n")
+			}
 		}
 		return nil
-	})
+	}, &pwd)
 	err := app.Run(
 		microservice.RegisterShowVersion(func(app *microservice.App, evt *zerolog.Event) {
 			config := app.Config.(*AppConfig)
 			evt = evt.Str("User Hebron Usr", config.Users.HebronUser).
 				Str("User Hebron Pth", config.Users.HebronPath).
 				Str("User Upload Usr", config.Users.UploadUser).
-				Str("User Upload Pth", config.Users.UploadPath).
-				Str("AC A RegionId", config.Cognito.RegionID).
-				Str("AC B   PoolId", config.Cognito.UserPoolID).
-				Str("AC C ClientId", config.Cognito.AppClientID).
-				Str("AC D   Secret", common.MaskedSecret(config.Cognito.AppClientSecret))
+				Str("User Upload Pth", config.Users.UploadPath)
 
 			if config.Monitor.AppMode != "WEBDAVONLY" {
 				evt = evt.Int("Mon    Dur Mins", config.Monitor.DurMins).
@@ -141,18 +127,23 @@ func main() {
 				mode = "WebDav and Monitor"
 			}
 			if config.Vault.Address != ""{
-				evt = evt.Str("Vault Environ", config.Log.Environment).
-					Str("Vault   Token", common.MaskedSecret(config.Vault.Token)).
-					Str("Vault Address", config.Vault.Address).
-					Str("Vault  Domain", config.Vault.Domain).
-					Str("Vault  Secret", common.MaskedSecret(config.Vault.CfgEncSecret)).
-					Str("Vault CfgPath", config.Vault.ConfigPath)
+				evt = evt.Str("Vault  Environ", config.Log.Environment).
+					Str("Vault  Address", config.Vault.Address).
+					Str("Vault   Domain", config.Vault.Domain).
+					Str("Vault   Secret", common.MaskedSecret(config.Vault.CfgEncSecret)).
+					Str("Vault  CfgPath", config.Vault.ConfigPath)
+				if config.Vault.Token != ""{
+					evt = evt.Str("Vault    Token", common.MaskedSecret(config.Vault.Token))
+				}
+				if config.Vault.RegToken != ""{
+					evt = evt.Str("Vault RegToken", common.MaskedSecret(config.Vault.RegToken))
+				}
 			}
 			evt.Msgf("WebDav: %s Mode: %s", build.Version, mode)
 		}),
 		microservice.RegisterService(func(app *microservice.App) svc.Service {
 			s := NewService(app)
-			app.RegisterWebService(NewIdApi(s))
+			app.RegisterWebService(NewWebDavListener(s))
 			if s.SvcConfig.Monitor.AppMode != "WEBDAVONLY" {
 				app.RegisterService(s)
 			}

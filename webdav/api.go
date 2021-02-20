@@ -2,23 +2,23 @@ package main
 
 import (
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	authvault "ntc.org/mclib/auth/vault"
-	"github.com/rs/zerolog/log"
 	"ntc.org/mclib/common"
 	"ntc.org/mclib/nechi"
 	"sync"
 )
 
 func init() {
-	nechi.ServicePort = 4100
+	nechi.ServicePort = 80
 }
 
 var (
 	mlock         sync.Mutex
 )
 
-func NewIdApi(srv *service) *nechi.WebChi {
+func NewWebDavListener(srv *service) *nechi.WebChi {
 	sconfig := srv.AppConfig.Http
 	app := nechi.NewWebApp(&srv.AppStatus, sconfig)
 	if  srv.SvcConfig.Monitor.AppMode != "MONITORONLY" {
@@ -26,10 +26,7 @@ func NewIdApi(srv *service) *nechi.WebChi {
 		if err!=nil{
 			panic(err)
 		}
-		if srv.SvcConfig.Vault.Token!=""{
-			log.Info().Msgf("Enable Vault User Authentication")
-			ws.AuthUser(srv.VaultAuthUser)
-		}
+		ws.AuthUser(srv.VaultAuthUser)
 	}
 	app.ApiHealth("/healthcheck", HealthCheck)
 	return app
@@ -40,6 +37,10 @@ func (srv *service) VaultAuthUser(dav *nechi.WebDavService, r *http.Request) (*n
 	if !ok{
 		return nil, nil
 	}
+	if srv.SvcConfig.Vault.Token == "" || userName == srv.SvcConfig.Users.HebronUser {
+		return nechi.DefaultAuthenticateUser(dav, r)
+	}
+	log.Info().Msgf("Enable Vault User Authentication")
 	env := srv.SvcConfig.Vault.Environment
 	domain := srv.SvcConfig.Vault.Domain
 	res, err := srv.vault.UserPassLogin(env, domain, userName, password)
