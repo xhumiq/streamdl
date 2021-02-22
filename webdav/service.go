@@ -71,8 +71,9 @@ func RegisterToken(config *AppConfig, env, domain, name string) (*authvault.Crea
 	if token.ClientToken == "" {
 		return nil, errors.Errorf("Unable to create token")
 	}
-	log.Info().Msgf("Created Service Env: %s Name: %s Token: %s", env, name, common.MaskedSecret(token.ClientToken))
+	log.Info().Msgf("Created Service Token Env: %s Name: %s Token: %s", env, name, common.MaskedSecret(token.ClientToken))
 	vc.Token = token.ClientToken
+	config.Vault.Token = token.ClientToken
 	key, err := hex.DecodeString(config.Vault.CfgEncSecret)
 	if err != nil {
 		return nil, err

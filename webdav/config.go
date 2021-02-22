@@ -65,6 +65,7 @@ func NewApp(name, display string) *microservice.App {
 		if _, err := RegisterToken(&config, config.Log.Environment, "ziongjcc.org", name); err!=nil{
 			log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to register token")
 		}
+		println("Created Service Token", name, common.MaskedSecret(config.Vault.Token))
 	}
 	config.Http.Users = []*nechi.UserProfile{
 		&nechi.UserProfile{

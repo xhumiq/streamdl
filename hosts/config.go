@@ -6,6 +6,7 @@ import (
 	"ntc.org/mclib/netutils/bitbucket"
 	"ntc.org/mclib/netutils/linode"
 	"ntc.org/mclib/netutils/sshutils"
+	"ntc.org/mclib/storage"
 )
 
 type AppConfig struct {
@@ -19,6 +20,9 @@ type AppConfig struct {
 func NewApp() *microservice.App {
 	config := AppConfig{}
 	app := microservice.NewApp(build, &secrets, &config, nil)
+	if config.Hosts.SshPrivateKey!=""{
+		config.Hosts.SshPrivateKey = storage.ConvertUNCPath(config.Hosts.SshPrivateKey)
+	}
 	return app
 }
 

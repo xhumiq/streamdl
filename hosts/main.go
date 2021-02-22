@@ -9,14 +9,17 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/ini.v1"
+	"io/ioutil"
 	"net"
 	"ntc.org/mclib/netutils/bitbucket"
 	"ntc.org/mclib/netutils/linode"
 	"ntc.org/mclib/netutils/sshutils"
+	"ntc.org/mclib/storage"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	osUser "os/user"
 
 	"ntc.org/mclib/common"
 	"ntc.org/mclib/microservice"
@@ -48,6 +51,65 @@ func main() {
 		println(string(b))
 		return nil
 	}, &name, &path)
+	app.Cmd("aws-lookup <host>", func(c *cli.Context) error {
+		sc := app.Config.(*AppConfig)
+		aws := NewAWSRoute53(sc.Aws)
+		name = strings.Trim(name, "\"',:;. ")
+		resp, err := aws.LookupDomainIPs(dnsRequest{
+			Name:   name,
+		})
+		if err != nil{
+			return err
+		}
+		for _, r := range resp{
+			fmt.Fprintf(os.Stdout, r + "\n")
+			return nil
+		}
+		return nil
+	}, &name)
+	app.Cmd("aws-swap <host1> <host2>", func(c *cli.Context) error {
+		sc := app.Config.(*AppConfig)
+		aws := NewAWSRoute53(sc.Aws)
+		name = strings.Trim(name, "\"',:;. ")
+		name2 := strings.Trim(addr, "\"',:;. ")
+		path1, err := aws.LookupDomainIP(dnsRequest{
+			Name:   name,
+		})
+		if err != nil{
+			return err
+		}
+		path2, err := aws.LookupDomainIP(dnsRequest{
+			Name:   name2,
+		})
+		if err != nil{
+			return err
+		}
+		log.Info().Msgf("Setting %s -> %s", name, path2)
+		log.Info().Msgf("Setting %s -> %s", name2, path1)
+		resp, err := aws.UpsertDomainRecord(dnsRequest{
+			Name:   name,
+			Target: path2,
+			TTL:    60,
+			Weight: 255,
+		})
+		if err != nil{
+			return err
+		}
+		b, _ := json.MarshalIndent(resp, "", "  ")
+		println(string(b))
+		resp, err = aws.UpsertDomainRecord(dnsRequest{
+			Name:   name2,
+			Target: path1,
+			TTL:    60,
+			Weight: 255,
+		})
+		if err != nil{
+			return err
+		}
+		b, _ = json.MarshalIndent(resp, "", "  ")
+		println(string(b))
+		return nil
+	}, &name, &addr)
 	app.Cmd("del-cname <host>", func(c *cli.Context) error {
 		sc := app.Config.(*AppConfig)
 		aws := NewAWSRoute53(sc.Aws)
@@ -192,6 +254,94 @@ func main() {
 		}
 		return nil
 	}, &name)
+	app.Cmd("append [-i,--input <inpPath>] <host> <path>", func(c *cli.Context) error {
+		sc := app.Config.(*AppConfig)
+		cpath := "~/.ssh/config"
+		cfile, err := sshutils.ParseSshConfigFile(cpath)
+		if err != nil{
+			return err
+		}
+		e:= cfile.FindSingleSshEntry(name)
+		host := name
+		pkey := sc.Hosts.SshPrivateKey
+		if e != nil{
+			port = e.Port
+			host = e.HostName
+			if e.IdentityFile!=""{
+				pkey = e.IdentityFile
+			}
+		}
+		cu, err := osUser.Current()
+		if err!=nil{
+			return err
+		}
+		sd, err := sshutils.RemoteConnect(sshutils.RemoteConfig{
+			User:       cu.Username,
+			Address:    host,
+			Port:       port,
+			PrivateKey: pkey,
+		})
+		defer func(){if sd!=nil {_=sd.Close()}}()
+		if err!=nil{
+			return err
+		}
+		addr = storage.ConvertUNCPath(addr)
+		content, err := ioutil.ReadFile(addr)
+		if err!=nil{
+			return err
+		}
+		_, err = sd.RootAppend(path, string(content))
+		return err
+	}, &addr, &name, &path)
+	app.Cmd("rcat <host> <path>", func(c *cli.Context) error {
+		sc := app.Config.(*AppConfig)
+		cpath := "~/.ssh/config"
+		cfile, err := sshutils.ParseSshConfigFile(cpath)
+		if err != nil{
+			return err
+		}
+		e:= cfile.FindSingleSshEntry(name)
+		host := name
+		pkey := sc.Hosts.SshPrivateKey
+		if e != nil{
+			port = e.Port
+			host = e.HostName
+			if e.IdentityFile!=""{
+				pkey = e.IdentityFile
+			}
+		}
+		cu, err := osUser.Current()
+		if err!=nil{
+			return err
+		}
+		sd, err := sshutils.RemoteConnect(sshutils.RemoteConfig{
+			User:       cu.Username,
+			Address:    host,
+			Port:       port,
+			PrivateKey: pkey,
+		})
+		defer func(){if sd!=nil {_=sd.Close()}}()
+		if err!=nil{
+			return err
+		}
+		body, err := sd.RootCat(path)
+		fmt.Fprintf(os.Stdout, body)
+		return err
+	}, &name, &path)
+	app.Cmd("sshcfg-look <name>", func(c *cli.Context) error {
+		path = "~/.ssh/config"
+		cfile, err := sshutils.ParseSshConfigFile(path)
+		if err != nil{
+			return err
+		}
+		e:= cfile.FindSingleSshEntry(name)
+		if e!=nil{
+			fmt.Fprintf(os.Stdout, e.HostName + "\n")
+		}else {
+			println("Name not found:", name)
+		}
+		return nil
+	}, &name)
 	app.Cmd("set-ssh [-k,--key <key>] [-p,--port <port>] [-c,--comments <comments>] <file> <name> <user> <addr>", func(c *cli.Context) error {
 		sc := app.Config.(*AppConfig)
 		cfg := sc.Hosts
@@ -252,14 +402,17 @@ func main() {
 		}
 		return nil
 	}, &key, &port, &comments, &path, &name, &user, &addr)
-	host := "us.ziongjcc.org"
 	app.Cmd("bb-access <host>", func(c *cli.Context) error {
 		sc := app.Config.(*AppConfig)
+		cu, err := osUser.Current()
+		if err!=nil{
+			return err
+		}
 		sd, err := sshutils.RemoteConnect(sshutils.RemoteConfig{
-			User:       "mchu",
-			Address:    host,
+			User:       cu.Username,
+			Address:    name,
 			Port:       9980,
-			PrivateKey: "/home/mchu/.ssh/gjcc/gjcc_rsa",
+			PrivateKey: sc.Hosts.SshPrivateKey,
 		})
 		defer func(){if sd!=nil {_=sd.Close()}}()
 		if err!=nil{
@@ -274,7 +427,7 @@ func main() {
 		if err!=nil{
 			return err
 		}
-		label := "GJCC-" + host[:2]
+		label := "GJCC-" + name[:2]
 		_, err = cln.UpsertDeploymentKeys("ChKD144/elzion", bitbucket.BBDeployKeyRequest{
 			Label: strings.ToUpper(label),
 			Key:   pub,
@@ -283,20 +436,25 @@ func main() {
 			return err
 		}
 		return err
-	}, host)
+	}, name)
 	app.Cmd("link-remote", func(c *cli.Context) error {
-		err := sshutils.LinkRemoteSsh(sshutils.LinkRemoteSshParams{
+		sc := app.Config.(*AppConfig)
+		cu, err := osUser.Current()
+		if err!=nil{
+			return err
+		}
+		err = sshutils.LinkRemoteSsh(sshutils.LinkRemoteSshParams{
 			Source:        &sshutils.RemoteConfig{
-				User:       "mchu",
+				User:       cu.Username,
 				Address:    "jp.ziongjcc.org",
 				Port:       9980,
-				PrivateKey: "/home/mchu/.ssh/gjcc/gjcc_rsa",
+				PrivateKey: sc.Hosts.SshPrivateKey,
 			},
-			Destination:        &sshutils.RemoteConfig{
-				User:       "mchu",
+			Destination:   &sshutils.RemoteConfig{
+				User:       cu.Username,
 				Address:    "us.ziongjcc.org",
 				Port:       9980,
-				PrivateKey: "/home/mchu/.ssh/gjcc/gjcc_rsa",
+				PrivateKey: sc.Hosts.SshPrivateKey,
 			},
 			SourceUser:    "media",
 			DestUser:      "root",
@@ -307,7 +465,43 @@ func main() {
 		return err
 	}, &group, &comments, &path, &name, &addr)
 
-	app.Cmd("set-host [-g,--group <group>] [-c,--comments <comments>] [-f,--hostpath <host path>] <name> <addr>", func(c *cli.Context) error {
+	app.Cmd("set-hostname <name> <hostname>", func(c *cli.Context) error {
+		sc := app.Config.(*AppConfig)
+		path = "~/.ssh/config"
+		cfile, err := sshutils.ParseSshConfigFile(path)
+		if err != nil{
+			return err
+		}
+		port := 22
+		e := cfile.FindSingleSshEntry(name)
+		host := name
+		pkey := sc.Hosts.SshPrivateKey
+		if e != nil{
+			port = e.Port
+			host = e.HostName
+			if e.IdentityFile!=""{
+				pkey = e.IdentityFile
+			}
+		}
+		cu, err := osUser.Current()
+		if err!=nil{
+			return err
+		}
+		sd, err := sshutils.RemoteConnect(sshutils.RemoteConfig{
+			User:       cu.Username,
+			Address:    host,
+			Port:       port,
+			PrivateKey: pkey,
+		})
+		defer func(){if sd!=nil {_=sd.Close()}}()
+		if err!=nil{
+			return err
+		}
+		_, err = sd.SetHostName(addr)
+		return err
+	}, &name, &addr)
+
+	app.Cmd("set-host [-g,--group <group>] [-c,--comments <comments>] [-f,--hostpath <hostPath>] <name> <addr>", func(c *cli.Context) error {
 		sc := app.Config.(*AppConfig)
 		cfg := sc.Hosts
 		path = common.FirstNotEmpty(path, cfg.HostPath)

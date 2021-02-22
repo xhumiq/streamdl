@@ -40,7 +40,9 @@ type dnsRequest struct {
 	Weight int64
 	ZoneId string
 }
-
+func (r *AWSRoute53) GetDomainRecords(request dnsRequest) ([]*route53.ResourceRecordSet, error){
+	return r.listDomainRecords(request)
+}
 func (r *AWSRoute53) listDomainRecords(request dnsRequest) ([]*route53.ResourceRecordSet, error){
 	zoneId := request.ZoneId
 	if zoneId == ""{
@@ -64,6 +66,38 @@ func (r *AWSRoute53) listDomainRecords(request dnsRequest) ([]*route53.ResourceR
 		return nil, errors.Wrapf(err, "Unable to List Domain Records")
 	}
 	return list, err
+}
+func (r *AWSRoute53) LookupDomainIP(request dnsRequest) (string, error){
+	resp, err := r.LookupDomainIPs(request)
+	if err != nil{
+		return "", err
+	}
+	for _, r := range resp{
+		return r, nil
+	}
+	return "", nil
+}
+func (r *AWSRoute53) LookupDomainIPs(request dnsRequest) ([]string, error){
+	resp, err := r.listDomainRecords(request)
+	if err!=nil{
+		return nil, err
+	}
+	ips := []string{}
+	for _, r := range resp{
+		if len(r.ResourceRecords) < 1{
+			continue
+		}
+		for _, ra := range r.ResourceRecords{
+			if ra.Value == nil || *ra.Value==""{
+				continue
+			}
+			if !common.REIpAddress.MatchString(*ra.Value){
+				continue
+			}
+			ips = append(ips, *ra.Value)
+		}
+	}
+	return ips, nil
 }
 func (r *AWSRoute53) UpsertDomainRecord(request dnsRequest) (*route53.ChangeResourceRecordSetsOutput, error){
 	_, err := r.DeleteDNSRecord(request)

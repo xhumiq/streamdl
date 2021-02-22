@@ -13,6 +13,7 @@ require (
 	ntc.org/mclib/netutils/bitbucket v0.1.0
 	ntc.org/mclib/netutils/linode v0.1.0
 	ntc.org/mclib/netutils/sshutils v0.1.0
+	ntc.org/mclib/storage v0.1.0
 )
 
 replace (
