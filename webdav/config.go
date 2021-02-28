@@ -62,10 +62,12 @@ func NewApp(name, display string) *microservice.App {
 	}
 	authvault.InitConfig(&config.Vault.VaultConfig, config.Log, config.Log.Environment, secrets.JwtSecret, filepath.Dir(build.ExeBinPath))
 	if config.Vault.RegToken != "" && len(config.Vault.Credentials()) < 1{
-		if _, err := RegisterToken(&config, config.Log.Environment, "ziongjcc.org", name); err!=nil{
+		env := authvault.GetEnv(config.Log, "", config.Vault.Environment)
+		if _, err := authvault.RegisterToken(&config.Vault.VaultConfig, &config.Log, env, "ziongjcc.org", name, "elzion"); err!=nil{
 			log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to register token")
 		}
 		println("Created Service Token", name, common.MaskedSecret(config.Vault.Token))
+		config.Vault.SetRegistered(true)
 	}
 	config.Http.Users = []*nechi.UserProfile{
 		&nechi.UserProfile{

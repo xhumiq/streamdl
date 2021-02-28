@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/hex"
-	"fmt"
 	"strings"
 	"time"
 
@@ -40,51 +38,6 @@ func NewService(app *microservice.App) *service {
 
 func (svc service) Name() string {
 	return appName
-}
-
-func RegisterToken(config *AppConfig, env, domain, name string) (*authvault.CreatedToken, error){
-	vc := config.Vault.VaultConfig
-	vc.Token = vc.RegToken
-	vc.AutoRenew = false
-	if vc.Token == ""{
-		return nil, errors.Errorf("Registor Token is not specified")
-	}
-	client, err := authvault.NewVaultClient(vc, &config.Log)
-	if err!=nil{
-		return nil, err
-	}
-	env = authvault.GetEnv(config.Log, env, config.Vault.Environment)
-	if domain == ""{
-		domain = "ziongjcc.org"
-	}
-	if name == ""{
-		name = config.Vault.HostName
-	}
-	if name == ""{
-		name = "webdav"
-	}
-	token, err := client.CreateServiceToken(env, domain, "elzion", name)
-	if err != nil{
-		log.Error().Str("Error",fmt.Sprintf("%+v", err)).Msgf("Create Service Token")
-		return nil, err
-	}
-	if token.ClientToken == "" {
-		return nil, errors.Errorf("Unable to create token")
-	}
-	log.Info().Msgf("Created Service Token Env: %s Name: %s Token: %s", env, name, common.MaskedSecret(token.ClientToken))
-	vc.Token = token.ClientToken
-	config.Vault.Token = token.ClientToken
-	key, err := hex.DecodeString(config.Vault.CfgEncSecret)
-	if err != nil {
-		return nil, err
-	}
-	println("Save Vault Credentials")
-	credentials := authvault.LocalCredentials{}
-	credentials["_"] = authvault.LocalCredentialEntry{
-		Token: token.ClientToken,
-	}
-	err = authvault.SaveVaultCredentials(key, config.Vault.ConfigPath, credentials)
-	return token, err
 }
 
 func (s *service) Start(sd *common.ShutDownable) error {

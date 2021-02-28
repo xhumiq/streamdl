@@ -25,6 +25,27 @@ build:
 
 docker_build: docker_loc_build
 
+docker_run:
+	docker run -it \
+	    -p 8080:80 \
+	    -e "API_PORT=80" \
+        -e "VAULT_ADDR=https://ops1-1.ziongjcc.org:8200" \
+        -e "VAULT_DOMAIN=ziongjcc.org" \
+        -e "VAULT_FOLLOWERS=https://ops1-2.ziongjcc.org:8200,https://ops1-3.ziongjcc.org:8200" \
+        -e "VAULT_REG_TOKEN=$$(vcli token -e dev reg)" \
+        -e "HEBRON_PATH=/srv/media" \
+        -e "HEBRON_USER=$$(jq -r '.["HEBRON_USER"]' /ntc/ops/devops/secrets/passwd/general.json)" \
+        -e "HEBRON_PASSWD=$$(jq -r '.["HEBRON_PASSWD"]' /ntc/ops/devops/secrets/passwd/general.json)" \
+        -e "JACOB_PATH=/srv/upload" \
+        -e "JACOB_USER=$$(jq -r '.["JACOB_USER"]' /ntc/ops/devops/secrets/passwd/general.json)" \
+        -e "JACOB_PASSWD=$$(jq -r '.["JACOB_PASSWD"]' /ntc/ops/devops/secrets/passwd/general.json)" \
+        -e "MS_ENVIRONMENT=dev" \
+        -e "WEBDAV_MODE=FULLSERVICE" \
+        -e "SVC_NAME=file-us" \
+        -v "/run/media/mchu/Projects/pub/media/zsf:/srv/media" \
+        -v "/home/mchu/Downloads/Upload:/srv/upload" \
+        webdav
+
 docker_loc_build:
 	@cp ./docker.ignore ../../.dockerignore
 	@cd ../../ && \

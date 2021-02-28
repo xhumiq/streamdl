@@ -37,10 +37,10 @@ func (srv *service) VaultAuthUser(dav *nechi.WebDavService, r *http.Request) (*n
 	if !ok{
 		return nil, nil
 	}
+	//  || userName == srv.SvcConfig.Users.UploadUser
 	if srv.SvcConfig.Vault.Token == "" || userName == srv.SvcConfig.Users.HebronUser {
 		return nechi.DefaultAuthenticateUser(dav, r)
 	}
-	log.Info().Msgf("Enable Vault User Authentication")
 	env := srv.SvcConfig.Vault.Environment
 	domain := srv.SvcConfig.Vault.Domain
 	res, err := srv.vault.UserPassLogin(env, domain, userName, password)

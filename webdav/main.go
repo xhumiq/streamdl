@@ -43,7 +43,11 @@ func main() {
 	env, domain, policy, token, name := "", "", "", "", ""
 	app.Cmd("token [-e,--env <env>] [-d,--domain <domain>] [-p,--policy <policy>] [-t,--token <token>] <name>", func(c *cli.Context) error {
 		config := app.Config.(*AppConfig)
-		_, err := RegisterToken(config, env, domain, name)
+		if config.Vault.Registered(){
+			return nil
+		}
+		env = authvault.GetEnv(config.Log, env, config.Vault.Environment)
+		_, err := authvault.RegisterToken(&config.Vault.VaultConfig, &config.Log, env, domain, name, "elzion")
 		return err
 	}, &env, &domain, &policy, &token, &name)
 	app.Cmd("login", func(c *cli.Context) error {
