@@ -25,7 +25,7 @@ type service struct {
 
 func NewService(app *microservice.App) *service {
 	config := app.Config.(*AppConfig)
-	client, err := authvault.NewVaultClient(config.Vault.VaultConfig, &config.Log)
+	client, err := authvault.NewVaultClient(config.Vault.VaultConfig)
 	checkError(err)
 	return &service{
 		App:         app,

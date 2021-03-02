@@ -1,17 +1,15 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	authvault "ntc.org/mclib/auth/vault"
-	"os"
 	"sync"
 	"time"
+
+	authvault "ntc.org/mclib/auth/vault"
 
 	"github.com/judwhite/go-svc/svc"
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/crypto/bcrypt"
 	"ntc.org/mclib/common"
 	"ntc.org/mclib/microservice"
 )
@@ -22,50 +20,42 @@ const (
 
 func main() {
 	app := NewApp(appName, "WebDav Service")
-	app.Cmd("elzion", func(c *cli.Context) error {
-		svc := NewService(app)
-		env := svc.SvcConfig.Log.Environment
-		env = authvault.GetEnv(svc.SvcConfig.Log, env, svc.SvcConfig.Vault.Environment)
-		t1 := time.Now()
-		for i := 0;i < 10;i++{
-			ezUsers := make(map[string]string)
-			_, err := svc.vault.GetConnectionVars(env, "elzion", &ezUsers, "webdav")
-			if err != nil{
-				return err
-			}
-			b, _ := json.MarshalIndent(ezUsers, "", "  ")
-			println(string(b))
-			break
-		}
-		println(time.Now().Sub(t1).String())
-		return nil
-	})
 	env, domain, policy, token, name := "", "", "", "", ""
-	app.Cmd("token [-e,--env <env>] [-d,--domain <domain>] [-p,--policy <policy>] [-t,--token <token>] <name>", func(c *cli.Context) error {
+	app.Cmd("init [-e,--env <env>] [-d,--domain <domain>] [-p,--policy <policy>] [-t,--token <token>] <name>", func(c *cli.Context) error {
 		config := app.Config.(*AppConfig)
-		if config.Vault.Registered(){
+		if config.registered {
 			return nil
 		}
-		env = authvault.GetEnv(config.Log, env, config.Vault.Environment)
-		_, err := authvault.RegisterToken(&config.Vault.VaultConfig, &config.Log, env, domain, name, "elzion")
+		env = authvault.GetEnv(&config.Log, env, config.Vault.Environment)
+		_, err := authvault.RegisterToken(authvault.InitConfigParams{
+			Env:              authvault.GetEnv(&config.Log, env, config.Vault.Environment),
+			Name:             name,
+			Domain:           domain,
+			Policy:           "elzion",
+			Secret:           secrets.JwtSecret,
+			Config:           &config.Vault.VaultConfig,
+			SqlConfigs:       []string{"elzion/hebron", "elzion/jacob"},
+			LogConfig:        &config.Log,
+			RegisterIfNeeded: true,
+		})
 		return err
 	}, &env, &domain, &policy, &token, &name)
 	app.Cmd("login", func(c *cli.Context) error {
 		svc := NewService(app)
 		env := svc.SvcConfig.Log.Environment
-		env = authvault.GetEnv(svc.SvcConfig.Log, env, svc.SvcConfig.Vault.Environment)
+		env = authvault.GetEnv(&svc.SvcConfig.Log, env, svc.SvcConfig.Vault.Environment)
 		t1 := time.Now()
 		//UNNSA~O.980
-		for i := 0;i < 10;i++{
+		for i := 0; i < 10; i++ {
 			res, err := svc.vault.UserPassLogin(env, "ziongjcc.org", "UNNSA~O.980", "*ChRisTKD~144^PeaCE=!")
-			if err != nil{
+			if err != nil {
 				return err
 			}
-			if res == nil{
+			if res == nil {
 				continue
 			}
 			md, _ := res.Auth.MetaData.(*authvault.AuthIdentity)
-			if md!=nil{
+			if md != nil {
 				println(md.Scope)
 			}
 			break
@@ -76,9 +66,9 @@ func main() {
 	app.Cmd("webdav", func(c *cli.Context) error {
 		config := app.Config.(*AppConfig)
 		wg := sync.WaitGroup{}
-		for i:=0;i<30;i++{
+		for i := 0; i < 30; i++ {
 			wg.Add(1)
-			go func(){
+			go func() {
 				defer wg.Done()
 				_, err := CheckHealth("https://file-us.ziongjcc.org", config)
 				println(fmt.Sprintf("%+v", err))
@@ -87,20 +77,6 @@ func main() {
 		wg.Wait()
 		return nil
 	})
-	pwd := ""
-	app.Cmd("pwd <pwd>", func(c *cli.Context) error {
-		var bpwd []byte
-		var err error
-		if len(pwd) > 0{
-			if bpwd, err = bcrypt.GenerateFromPassword([]byte(pwd), 5); err != nil {
-				return err
-			}
-			if len(bpwd) > 0 {
-				fmt.Fprintf(os.Stdout, string(bpwd) + "\n")
-			}
-		}
-		return nil
-	}, &pwd)
 	err := app.Run(
 		microservice.RegisterShowVersion(func(app *microservice.App, evt *zerolog.Event) {
 			config := app.Config.(*AppConfig)
@@ -130,16 +106,16 @@ func main() {
 			if mode == "" {
 				mode = "WebDav and Monitor"
 			}
-			if config.Vault.Address != ""{
+			if config.Vault.Address != "" {
 				evt = evt.Str("Vault  Environ", config.Log.Environment).
 					Str("Vault  Address", config.Vault.Address).
 					Str("Vault   Domain", config.Vault.Domain).
 					Str("Vault   Secret", common.MaskedSecret(config.Vault.CfgEncSecret)).
 					Str("Vault  CfgPath", config.Vault.ConfigPath)
-				if config.Vault.Token != ""{
+				if config.Vault.Token != "" {
 					evt = evt.Str("Vault    Token", common.MaskedSecret(config.Vault.Token))
 				}
-				if config.Vault.RegToken != ""{
+				if config.Vault.RegToken != "" {
 					evt = evt.Str("Vault RegToken", common.MaskedSecret(config.Vault.RegToken))
 				}
 			}

@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
+	"ntc.org/mclib/auth"
+	"path/filepath"
+
 	"github.com/rs/zerolog/log"
 	"ntc.org/mclib/auth/cognito"
 	authvault "ntc.org/mclib/auth/vault"
 	"ntc.org/mclib/common"
 	"ntc.org/mclib/microservice"
 	"ntc.org/mclib/nechi"
-	"path/filepath"
 )
 
 type AppConfig struct {
@@ -17,7 +19,7 @@ type AppConfig struct {
 	Log     common.LogConfig
 	Http    nechi.Config
 	Cognito cognito.Config
-	Vault   struct{
+	Vault   struct {
 		authvault.VaultConfig
 	}
 	Monitor struct {
@@ -38,6 +40,8 @@ type AppConfig struct {
 		UploadBCrypt string `default:"rhema" env:"JACOB_BCRYPT" json:"-" yaml:"-"`
 		UploadPath   string `default:"/srv/upload" env:"JACOB_PATH" json:"JACOB_PATH" yaml:"JACOB_PATH"`
 	}
+	credentials authvault.LocalCredentials
+	registered  bool
 }
 
 func NewApp(name, display string) *microservice.App {
@@ -51,23 +55,49 @@ func NewApp(name, display string) *microservice.App {
 		config.Service.Name = name
 	}
 	config.Service.DisplayName = display
-	if config.Vault.Domain==""{
+	if config.Vault.Domain == "" {
 		config.Vault.Domain = "ziongjcc.org"
 	}
-	if config.Vault.DefaultPolicy==""{
+	if config.Vault.DefaultPolicy == "" {
 		config.Vault.DefaultPolicy = "elzion"
 	}
-	if config.Vault.HostName == ""{
+	if config.Vault.HostName == "" {
 		config.Vault.HostName = config.Service.Name
 	}
-	authvault.InitConfig(&config.Vault.VaultConfig, config.Log, config.Log.Environment, secrets.JwtSecret, filepath.Dir(build.ExeBinPath))
-	if config.Vault.RegToken != "" && len(config.Vault.Credentials()) < 1{
-		env := authvault.GetEnv(config.Log, "", config.Vault.Environment)
-		if _, err := authvault.RegisterToken(&config.Vault.VaultConfig, &config.Log, env, "ziongjcc.org", name, "elzion"); err!=nil{
-			log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to register token")
+	resp, err := authvault.InitConfig(authvault.InitConfigParams{
+		Env:              config.Log.Environment,
+		Name:             name,
+		Secret:           secrets.JwtSecret,
+		Path:             filepath.Dir(build.ExeBinPath),
+		Domain:           "ziongjcc.org",
+		Policy:           "elzion",
+		Config:           &config.Vault.VaultConfig,
+		LogConfig:        &config.Log,
+		RegisterIfNeeded: true,
+		SqlConfigs:       []string{"elzion/hebron", "elzion/jacob"},
+	})
+	if err != nil {
+		log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to Initialize Vault Parameters")
+	}
+	if resp != nil {
+		config.credentials = resp.Credentials
+		config.registered = resp.Registered
+	}
+	if config.credentials!=nil{
+		if config.credentials["elzion/hebron"] != nil && config.credentials["elzion/hebron"].Credentials!=nil{
+			bc, err := auth.HashPasswordToBase64(config.credentials["elzion/hebron"].Credentials.Password)
+			if err != nil{
+				log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to hash password for hebron")
+			}
+			config.Users.HebronBCrypt = bc
 		}
-		println("Created Service Token", name, common.MaskedSecret(config.Vault.Token))
-		config.Vault.SetRegistered(true)
+		if config.credentials["elzion/jacob"] != nil && config.credentials["elzion/jacob"].Credentials!=nil{
+			bc, err := auth.HashPasswordToBase64(config.credentials["elzion/jacob"].Credentials.Password)
+			if err != nil{
+				log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to hash password for jacob")
+			}
+			config.Users.UploadBCrypt = bc
+		}
 	}
 	config.Http.Users = []*nechi.UserProfile{
 		&nechi.UserProfile{
