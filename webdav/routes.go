@@ -19,10 +19,9 @@ var (
 )
 
 func NewWebDavListener(srv *service) *nechi.WebChi {
-	sconfig := srv.AppConfig.Http
-	app := nechi.NewWebApp(&srv.AppStatus, sconfig)
+	app := nechi.NewWebApp(&srv.AppStatus, srv.AppConfig.Http, srv.keys)
 	if  srv.SvcConfig.Monitor.AppMode != "MONITORONLY" {
-		ws, err := app.AddWebDav(srv.SvcConfig.Monitor.DAVPrefix, sconfig)
+		ws, err := app.AddWebDav(srv.SvcConfig.Monitor.DAVPrefix, srv.AppConfig.Http)
 		if err!=nil{
 			panic(err)
 		}

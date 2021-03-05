@@ -1,6 +1,6 @@
 module ntc.org/netutils/webdav
 
-go 1.15
+go 1.16
 
 require (
 	github.com/judwhite/go-svc v1.1.2

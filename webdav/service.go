@@ -1,6 +1,7 @@
 package main
 
 import (
+	"ntc.org/mclib/auth"
 	"strings"
 	"time"
 
@@ -21,11 +22,15 @@ type service struct {
 	lastResults map[string]*webdavHealth
 	lastCheck   time.Time
 	vault       *authvault.VaultClient
+	keys        *auth.RsaKeys
 }
 
 func NewService(app *microservice.App) *service {
 	config := app.Config.(*AppConfig)
 	client, err := authvault.NewVaultClient(config.Vault.VaultConfig)
+	checkError(err)
+	env := authvault.GetEnv(&config.Log, config.Vault.Environment)
+	keys, err := client.CheckCurrentRole(env, app.Build.AppName, "elzion", client.Config().Token)
 	checkError(err)
 	return &service{
 		App:         app,
@@ -33,6 +38,7 @@ func NewService(app *microservice.App) *service {
 		lastResults: make(map[string]*webdavHealth),
 		chProc:      make(chan (time.Time), 10),
 		vault:       client,
+		keys:        keys,
 	}
 }
 

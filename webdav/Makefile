@@ -44,7 +44,7 @@ docker_run:
         -e "SVC_NAME=file-us" \
         -v "/run/media/mchu/Projects/pub/media/zsf:/srv/media" \
         -v "/home/mchu/Downloads/Upload:/srv/upload" \
-        webdav
+        ${dkname}
 
 docker_loc_build:
 	@cp ./docker.ignore ../../.dockerignore
