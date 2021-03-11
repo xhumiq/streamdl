@@ -30,7 +30,7 @@ func NewService(app *microservice.App) *service {
 	client, err := authvault.NewVaultClient(config.Vault.VaultConfig)
 	checkError(err)
 	env := authvault.GetEnv(&config.Log, config.Vault.Environment)
-	keys, err := client.CheckCurrentRole(env, app.Build.AppName, "elzion", client.Config().Token)
+	keys, err := client.CheckCurrentRole(env, config.Vault.HostName, "elzion", client.Config().Token)
 	checkError(err)
 	return &service{
 		App:         app,

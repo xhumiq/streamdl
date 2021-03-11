@@ -64,16 +64,17 @@ func NewApp(name, display string) *microservice.App {
 	if config.Vault.HostName == "" {
 		config.Vault.HostName = config.Service.Name
 	}
+	doReg := build.Command!="init"
 	resp, err := authvault.InitConfig(authvault.InitConfigParams{
 		Env:              config.Log.Environment,
-		Name:             name,
+		Name:             config.Vault.HostName,
 		Secret:           secrets.JwtSecret,
 		Path:             filepath.Dir(build.ExeBinPath),
 		Domain:           "ziongjcc.org",
 		Policy:           "elzion",
 		Config:           &config.Vault.VaultConfig,
 		LogConfig:        &config.Log,
-		RegisterIfNeeded: true,
+		RegisterIfNeeded: doReg,
 		SqlConfigs:       []string{"elzion/hebron", "elzion/jacob"},
 	})
 	if err != nil {
@@ -85,18 +86,18 @@ func NewApp(name, display string) *microservice.App {
 	}
 	if config.credentials!=nil{
 		if config.credentials["elzion/hebron"] != nil && config.credentials["elzion/hebron"].Credentials!=nil{
-			bc, err := auth.HashPasswordToBase64(config.credentials["elzion/hebron"].Credentials.Password)
+			bc, err := auth.HashPassword(config.credentials["elzion/hebron"].Credentials.Password)
 			if err != nil{
 				log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to hash password for hebron")
 			}
-			config.Users.HebronBCrypt = bc
+			config.Users.HebronBCrypt = string(bc)
 		}
 		if config.credentials["elzion/jacob"] != nil && config.credentials["elzion/jacob"].Credentials!=nil{
-			bc, err := auth.HashPasswordToBase64(config.credentials["elzion/jacob"].Credentials.Password)
+			bc, err := auth.HashPassword(config.credentials["elzion/jacob"].Credentials.Password)
 			if err != nil{
 				log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to hash password for jacob")
 			}
-			config.Users.UploadBCrypt = bc
+			config.Users.UploadBCrypt = string(bc)
 		}
 	}
 	config.Http.Users = []*nechi.UserProfile{

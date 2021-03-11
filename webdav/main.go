@@ -26,6 +26,12 @@ func main() {
 		if config.registered {
 			return nil
 		}
+		if name == ""{
+			name = config.Vault.HostName
+		}
+		if name == ""{
+			name = config.Service.Name
+		}
 		env = authvault.GetEnv(&config.Log, env, config.Vault.Environment)
 		_, err := authvault.RegisterToken(authvault.InitConfigParams{
 			Env:              authvault.GetEnv(&config.Log, env, config.Vault.Environment),
@@ -109,6 +115,7 @@ func main() {
 			if config.Vault.Address != "" {
 				evt = evt.Str("Vault  Environ", config.Log.Environment).
 					Str("Vault  Address", config.Vault.Address).
+					Str("Vault HostName", config.Vault.HostName).
 					Str("Vault   Domain", config.Vault.Domain).
 					Str("Vault   Secret", common.MaskedSecret(config.Vault.CfgEncSecret)).
 					Str("Vault  CfgPath", config.Vault.ConfigPath)
