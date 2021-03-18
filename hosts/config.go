@@ -1,12 +1,12 @@
 package main
 
 import (
-	"ntc.org/mclib/common"
-	"ntc.org/mclib/microservice"
-	"ntc.org/mclib/netutils/bitbucket"
-	"ntc.org/mclib/netutils/linode"
-	"ntc.org/mclib/netutils/sshutils"
-	"ntc.org/mclib/storage"
+	"bitbucket.org/xhumiq/go-mclib/common"
+	"bitbucket.org/xhumiq/go-mclib/microservice"
+	"bitbucket.org/xhumiq/go-mclib/netutils/bitbucket"
+	"bitbucket.org/xhumiq/go-mclib/netutils/linode"
+	"bitbucket.org/xhumiq/go-mclib/netutils/sshutils"
+	"bitbucket.org/xhumiq/go-mclib/storage"
 )
 
 type AppConfig struct {

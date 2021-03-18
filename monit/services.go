@@ -8,11 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"ntc.org/mclib/common"
+	"bitbucket.org/xhumiq/go-mclib/common"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"ntc.org/mclib/microservice"
+	"bitbucket.org/xhumiq/go-mclib/microservice"
 )
 
 type service struct {

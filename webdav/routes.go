@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"net/http"
-	authvault "ntc.org/mclib/auth/vault"
-	"ntc.org/mclib/common"
-	"ntc.org/mclib/nechi"
+	authvault "bitbucket.org/xhumiq/go-mclib/auth/vault"
+	"bitbucket.org/xhumiq/go-mclib/common"
+	"bitbucket.org/xhumiq/go-mclib/nechi"
 	"sync"
 )
 

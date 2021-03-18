@@ -8,7 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/url"
-	"ntc.org/mclib/common"
+	"bitbucket.org/xhumiq/go-mclib/common"
 	"os"
 	"path/filepath"
 	"regexp"

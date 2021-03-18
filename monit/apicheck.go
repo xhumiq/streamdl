@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
-	"ntc.org/mclib/common"
+	"bitbucket.org/xhumiq/go-mclib/common"
 	"strings"
 	"time"
 
 	"github.com/rs/zerolog/log"
-	"ntc.org/mclib/api"
-	"ntc.org/mclib/microservice"
+	"bitbucket.org/xhumiq/go-mclib/api"
+	"bitbucket.org/xhumiq/go-mclib/microservice"
 )
 
 func getCheckClients(host string, services []*apiHealthCheckInfo) ([]*apiHealthCheck, error) {

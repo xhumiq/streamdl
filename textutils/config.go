@@ -1,10 +1,10 @@
 package main
 
 import (
-	"ntc.org/mclib/common"
-	"ntc.org/mclib/microservice"
-	"ntc.org/mclib/netutils/bitbucket"
-	"ntc.org/mclib/netutils/sshutils"
+	"bitbucket.org/xhumiq/go-mclib/common"
+	"bitbucket.org/xhumiq/go-mclib/microservice"
+	"bitbucket.org/xhumiq/go-mclib/netutils/bitbucket"
+	"bitbucket.org/xhumiq/go-mclib/netutils/sshutils"
 )
 
 type AppConfig struct {

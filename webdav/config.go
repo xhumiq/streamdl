@@ -2,15 +2,15 @@ package main
 
 import (
 	"fmt"
-	"ntc.org/mclib/auth"
+	"bitbucket.org/xhumiq/go-mclib/auth"
 	"path/filepath"
 
 	"github.com/rs/zerolog/log"
-	"ntc.org/mclib/auth/cognito"
-	authvault "ntc.org/mclib/auth/vault"
-	"ntc.org/mclib/common"
-	"ntc.org/mclib/microservice"
-	"ntc.org/mclib/nechi"
+	"bitbucket.org/xhumiq/go-mclib/auth/cognito"
+	authvault "bitbucket.org/xhumiq/go-mclib/auth/vault"
+	"bitbucket.org/xhumiq/go-mclib/common"
+	"bitbucket.org/xhumiq/go-mclib/microservice"
+	"bitbucket.org/xhumiq/go-mclib/nechi"
 )
 
 type AppConfig struct {

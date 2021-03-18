@@ -1,0 +1,37 @@
+version: '3'
+services:
+  cdsrv:
+    container_name: elzion_cicd
+    image: cicd
+    environment:
+      SITE_BASE_URL: https://ziongjcc.org
+      SITE_ROOT_URL: /ELZion
+      TARGET_PATH: /opt/elzion/release
+      REPO_URL: "git@bitbucket.org:ChKD144/elzion.git"
+      REPO_NAME: elzion
+      REPO_BRANCH: master
+      DEPLOY_ROOT_PATH: /opt/deploy
+      GIT_ROOT_PATH: /srv/repos
+      GIT_SSH_CERT_PATH: /etc/ssh/bitbucket_rsa
+      MS_ENVIRONMENT: production
+      LOG_PATH: /var/log/cicd
+      SMTP_PASSWORD: "${PROJ_SMTP_PWD}"
+      CONFIG_ROOT_PATH: /opt/configs
+    volumes:
+      - /var/log/cicd:/var/log/cicd
+      - elzion:/opt/elzion
+      - repo:/opt/deploy/elzion
+      - configs:/opt/configs
+      - keys:/root/.ssh
+    ports:
+      - "9110:9110"
+    networks:
+      - cicd
+volumes:
+  elzion:
+  configs:
+  keys:
+  repo:
+networks:
+  cicd:
+    external: true

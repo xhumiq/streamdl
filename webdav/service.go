@@ -1,18 +1,18 @@
 package main
 
 import (
-	"ntc.org/mclib/auth"
+	"bitbucket.org/xhumiq/go-mclib/auth"
 	"strings"
 	"time"
 
-	authvault "ntc.org/mclib/auth/vault"
+	authvault "bitbucket.org/xhumiq/go-mclib/auth/vault"
 
 	"github.com/rs/zerolog/log"
 
-	"ntc.org/mclib/common"
+	"bitbucket.org/xhumiq/go-mclib/common"
 
 	"github.com/pkg/errors"
-	"ntc.org/mclib/microservice"
+	"bitbucket.org/xhumiq/go-mclib/microservice"
 )
 
 type service struct {

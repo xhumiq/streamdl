@@ -1,0 +1,18 @@
+version: '3'
+services:
+  elzion_cicd:
+    container_name: elzion_cicd
+    build: .
+    environment:
+      SITE_BASE_URL: https://elzion.mcdemo.org
+      REPO_URL: "git@bitbucket.org:xhumiq/elzion.git"
+    volumes:
+      - elzion:/opt/elzion
+    networks:
+      - cicd
+
+volumes:
+  elzion:
+networks:
+  cicd:
+    external: true

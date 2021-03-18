@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"ntc.org/mclib/common"
+	"bitbucket.org/xhumiq/go-mclib/common"
 )
 
 type AWSRoute53 struct {

@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"ntc.org/mclib/api"
+	"bitbucket.org/xhumiq/go-mclib/api"
 )
 
 type NetApiHealthCheckResponse struct {

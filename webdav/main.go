@@ -5,13 +5,13 @@ import (
 	"sync"
 	"time"
 
-	authvault "ntc.org/mclib/auth/vault"
+	authvault "bitbucket.org/xhumiq/go-mclib/auth/vault"
 
 	"github.com/judwhite/go-svc/svc"
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
-	"ntc.org/mclib/common"
-	"ntc.org/mclib/microservice"
+	"bitbucket.org/xhumiq/go-mclib/common"
+	"bitbucket.org/xhumiq/go-mclib/microservice"
 )
 
 const (

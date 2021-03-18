@@ -1,0 +1,20 @@
+version: '3'
+services:
+  elzion_cicd:
+    restart: always
+    container_name: elzion_cicd
+    build: .
+    environment:
+      SITE_BASE_URL: https://ziongjcc.org
+      REPO_URL: "git@bitbucket.org:ChkD144/elzion.git"
+    volumes:
+      - elzion:/opt/elzion
+    networks:
+      - cicd
+
+volumes:
+  elzion:
+
+networks:
+  cicd:
+    external: true

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"ntc.org/mclib/common"
+	"bitbucket.org/xhumiq/go-mclib/common"
 )
 
 type validationContext struct {

@@ -6,7 +6,7 @@ import (
 	_ "golang.org/x/text/encoding"
 	_ "golang.org/x/text/encoding/traditionalchinese"
 	"io/ioutil"
-	"ntc.org/mclib/microservice"
+	"bitbucket.org/xhumiq/go-mclib/microservice"
 	"os"
 	"path/filepath"
 	"strings"

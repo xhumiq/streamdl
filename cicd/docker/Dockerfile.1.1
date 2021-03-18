@@ -1,0 +1,44 @@
+FROM golang:1.11-alpine3.8 as builder
+# Must run in parent folder
+
+ARG BUILD_GITHASH="CICD"
+ARG BUILD_VERSION=0.1.0
+ARG BUILD_TAG=release
+ARG BUILD_TIME=
+ARG BRANCH=missing
+
+ENV TIME_ZONE=America/Los_Angeles
+
+RUN apk update && apk upgrade && \
+    apk --no-cache add curl git tzdata bash valgrind curl-dev zlib-dev openssh libssh2-dev libressl-dev libgit2 libgit2-dev alpine-sdk make cmake openssh-client && \
+    cp /usr/share/zoneinfo/$TIME_ZONE /etc/localtime && \
+    go get -d gopkg.in/libgit2/git2go.v27 && \
+    cd $GOPATH/src/gopkg.in/libgit2/git2go.v27 && \
+    git checkout next && \
+    git submodule update --init && \
+    echo $TIME_ZONE > /etc/timezone && \
+    apk del tzdata
+
+RUN cd $GOPATH/src/gopkg.in/libgit2/git2go.v27 && \
+    make install-static
+
+ENV GO111MODULE=on
+
+WORKDIR /go/src/ntc/app
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+
+COPY . .
+
+RUN	echo "-----------------------------------------------------------------------------------------" && \
+    echo "Updating cdsrv packages - and building source" && \
+    echo "BUILD_VERSION= $BUILD_VERSION" && \
+		echo "BRANCH=        $BRANCH"
+
+RUN export BUILD_TIME=$BUILD_TIME && \
+    export BUILD_TIME=${BUILD_TIME:-`date '+%F_%H:%M:%S'`} && \
+    export BUILD_FLAGS="-w -extldflags \"-static\" -s -X main.version=$BUILD_VERSION -X main.gitHash=$BUILD_GITHASH -X main.branch=$BRANCH -X main.buildStamp=$BUILD_TIME" && \
+    CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build --tags "static" -ldflags "$BUILD_FLAGS" -a -installsuffix cgo -o cdsrv

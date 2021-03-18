@@ -1,12 +1,11 @@
 package main
 
 import (
-	"ntc.org/mclib/nechi"
+	"bitbucket.org/xhumiq/go-mclib/nechi"
 )
 
 func NewApi(store *service) *nechi.WebChi {
-	sconfig := nechi.NewConfig(store.SvcConfig.Service.Port)
-	app := nechi.NewWebApp(&store.AppStatus, sconfig)
+	app := nechi.NewWebApp(&store.AppStatus, &store.SvcConfig.Http, nil)
 	app.ApiHealth("/healthcheck", HealthCheck)
 	return app
 }
