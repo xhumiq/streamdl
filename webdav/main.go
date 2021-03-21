@@ -94,7 +94,9 @@ func main() {
 				Str("MaxCost  Video", config.Caching.VideoMaxBytes).
 				Int("TTL Mins  Short", config.Caching.ShortTTLMins).
 				Int("TTL Mins Recent", config.Caching.RecentTTLMins).
-				Int("TTL Mins  Video", config.Caching.VideoTTLMins)
+				Int("TTL Mins  Video", config.Caching.VideoTTLMins).
+				Int("CacheVideo  Dys", config.Caching.VideoFilterDays).
+				Int("CacheRecent Dys", config.Caching.RecentFilterDays)
 
 			if config.Monitor.AppMode != "WEBDAVONLY" {
 				evt = evt.Int("Mon    Dur Mins", config.Monitor.DurMins).

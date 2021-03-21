@@ -20,11 +20,13 @@ type AppConfig struct {
 	Log     common.LogConfig
 	Http    nechi.Config
 	Caching struct {
-		VideoTTLMins   int    `default:"30" env:"VIDEO_TTL_MINS" json:"VIDEO_TTL_MINS" yaml:"VIDEO_TTL_MINS"`
-		RecentTTLMins  int    `default:"30" env:"RECENT_TTL_MINS" json:"RECENT_TTL_MINS" yaml:"RECENT_TTL_MINS"`
-		ShortTTLMins   int    `default:"5" env:"SHORT_TTL_SECS" json:"SHORT_TTL_SECS" yaml:"SHORT_TTL_SECS"`
-		VideoMaxBytes  string `default:"1>>33" env:"VIDEO_MAX_BYTES" json:"VIDEO_MAX_BYTES" yaml:"VIDEO_MAX_BYTES"`
-		RecentMaxBytes string `default:"1>>23" env:"RECENT_MAX_BYTES" json:"RECENT_MAX_BYTES" yaml:"RECENT_MAX_BYTES"`
+		VideoFilterDays  int    `default:"2" env:"VIDEO_FILTER_DAYS" json:"VIDEO_FILTER_DAYS" yaml:"VIDEO_FILTER_DAYS"`
+		RecentFilterDays int    `default:"7" env:"RECENT_FILTER_DAYS" json:"RECENT_FILTER_DAYS" yaml:"RECENT_FILTER_DAYS"`
+		VideoTTLMins     int    `default:"30" env:"VIDEO_TTL_MINS" json:"VIDEO_TTL_MINS" yaml:"VIDEO_TTL_MINS"`
+		RecentTTLMins    int    `default:"30" env:"RECENT_TTL_MINS" json:"RECENT_TTL_MINS" yaml:"RECENT_TTL_MINS"`
+		ShortTTLMins     int    `default:"5" env:"SHORT_TTL_SECS" json:"SHORT_TTL_SECS" yaml:"SHORT_TTL_SECS"`
+		VideoMaxBytes    string `default:"1>>33" env:"VIDEO_MAX_BYTES" json:"VIDEO_MAX_BYTES" yaml:"VIDEO_MAX_BYTES"`
+		RecentMaxBytes   string `default:"1>>23" env:"RECENT_MAX_BYTES" json:"RECENT_MAX_BYTES" yaml:"RECENT_MAX_BYTES"`
 	}
 	Cognito cognito.Config
 	Vault   authvault.VaultConfig

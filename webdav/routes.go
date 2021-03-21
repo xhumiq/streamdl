@@ -34,13 +34,13 @@ func NewWebDavListener(srv *service) *nechi.WebChi {
 				Method:     "GET",
 				UrlPattern: nil,
 				UrlPrefix:  "/Video/",
-				Duration:   common.ToDurationPtr(2 * 24 * time.Hour),
+				Duration:   common.ToDurationPtr(time.Duration(cacheCfg.VideoFilterDays) * 24 * time.Hour),
 			}, vc, time.Duration(cacheCfg.VideoTTLMins) * time.Minute),
 			nechi.AddCachePatternFilter(nechi.CachePatternFilter{
 				Method:     "GET",
 				UrlPattern: nil,
 				UrlPrefix:  "/Audio/",
-				Duration:   common.ToDurationPtr(7 * 24 * time.Hour),
+				Duration:   common.ToDurationPtr(time.Duration(cacheCfg.RecentFilterDays) * 24 * time.Hour),
 			}, rc, time.Duration(cacheCfg.RecentTTLMins) * time.Minute),
 		)
 		checkError(err)
