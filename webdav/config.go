@@ -1,16 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"bitbucket.org/xhumiq/go-mclib/auth"
-	"path/filepath"
-
-	"github.com/rs/zerolog/log"
 	"bitbucket.org/xhumiq/go-mclib/auth/cognito"
 	authvault "bitbucket.org/xhumiq/go-mclib/auth/vault"
 	"bitbucket.org/xhumiq/go-mclib/common"
 	"bitbucket.org/xhumiq/go-mclib/microservice"
 	"bitbucket.org/xhumiq/go-mclib/nechi"
+	"github.com/rs/zerolog/log"
+	"fmt"
+	"github.com/urfave/cli/v2"
+	"path/filepath"
 )
 
 type AppConfig struct {
@@ -45,77 +45,119 @@ type AppConfig struct {
 }
 
 func NewApp(name, display string) *microservice.App {
-	config := AppConfig{}
-	app := microservice.NewApp(build, &secrets, &config, &microservice.AppConfig{
-		Http: &nechi.Config{
-			Port: 80,
-		},
-	})
-	if config.Service.Name == "" {
-		config.Service.Name = name
-	}
-	config.Service.DisplayName = display
-	if config.Vault.Domain == "" {
-		config.Vault.Domain = "ziongjcc.org"
-	}
-	if config.Vault.DefaultPolicy == "" {
-		config.Vault.DefaultPolicy = "elzion"
-	}
-	if config.Vault.HostName == "" {
-		config.Vault.HostName = config.Service.Name
-	}
-	doReg := build.Command!="init"
-	resp, err := authvault.InitConfig(authvault.InitConfigParams{
-		Env:              config.Log.Environment,
-		Name:             config.Vault.HostName,
-		Secret:           secrets.JwtSecret,
-		Path:             filepath.Dir(build.ExeBinPath),
-		Domain:           "ziongjcc.org",
-		Policy:           "elzion",
-		Config:           &config.Vault.VaultConfig,
-		LogConfig:        &config.Log,
-		RegisterIfNeeded: doReg,
-		SqlConfigs:       []string{"elzion/hebron", "elzion/jacob"},
-	})
-	if err != nil {
-		log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to Initialize Vault Parameters")
-	}
-	if resp != nil {
-		config.credentials = resp.Credentials
-		config.registered = resp.Registered
-	}
-	if config.credentials!=nil{
-		if config.credentials["elzion/hebron"] != nil && config.credentials["elzion/hebron"].Credentials!=nil{
-			bc, err := auth.HashPassword(config.credentials["elzion/hebron"].Credentials.Password)
-			if err != nil{
-				log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to hash password for hebron")
+	app := microservice.NewApp(build, &secrets, &AppConfig{}, microservice.ConfigFlags(
+		func(config interface{}) []cli.Flag {
+			c := config.(*AppConfig)
+			return []cli.Flag{
+				&cli.StringFlag{
+					Name:        "appmode",
+					Usage:       "--appmode [WEBDAVONLY,MONITORONLY]",
+					Aliases:     []string{"a"},
+					Destination: &c.Monitor.AppMode,
+				},
+				&cli.StringFlag{
+					Name:        "domains",
+					Usage:       "--domains [jp,us]",
+					Aliases:     []string{"d"},
+					Destination: &c.Monitor.Domains,
+				},
+				&cli.StringFlag{
+					Name:        "video",
+					Usage:       "--video ./video",
+					Aliases:     []string{"w"},
+					Destination: &c.Monitor.VideoPath,
+				},
+				&cli.StringFlag{
+					Name:        "audio",
+					Usage:       "--audio ./audio",
+					Aliases:     []string{"a"},
+					Destination: &c.Monitor.AudioPaths,
+				},
+				&cli.StringFlag{
+					Name:        "user",
+					Usage:       "--user hebron",
+					Aliases:     []string{"u"},
+					Destination: &c.Users.HebronUser,
+				},
+				&cli.StringFlag{
+					Name:        "password",
+					Usage:       "--password 'rhema'",
+					Aliases:     []string{"p"},
+					Destination: &c.Users.HebronPwd,
+				},
 			}
-			config.Users.HebronBCrypt = string(bc)
+		}))
+	app.PreRunApp(func(app *microservice.App) {
+		config := app.Config.(*AppConfig)
+		if config.Http.Port < 25{
+			config.Http.Port = 80
 		}
-		if config.credentials["elzion/jacob"] != nil && config.credentials["elzion/jacob"].Credentials!=nil{
-			bc, err := auth.HashPassword(config.credentials["elzion/jacob"].Credentials.Password)
-			if err != nil{
-				log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to hash password for jacob")
+		if config.Service.Name == "" {
+			config.Service.Name = name
+		}
+		config.Service.DisplayName = display
+		if config.Vault.Domain == "" {
+			config.Vault.Domain = "ziongjcc.org"
+		}
+		if config.Vault.DefaultPolicy == "" {
+			config.Vault.DefaultPolicy = "elzion"
+		}
+		if config.Vault.HostName == "" {
+			config.Vault.HostName = config.Service.Name
+		}
+		doReg := build.Command!="init"
+		resp, err := authvault.InitConfig(authvault.InitConfigParams{
+			Env:              config.Log.Environment,
+			Name:             config.Vault.HostName,
+			Secret:           secrets.JwtSecret,
+			Path:             filepath.Dir(build.ExeBinPath),
+			Domain:           "ziongjcc.org",
+			Policy:           "elzion",
+			Config:           &config.Vault.VaultConfig,
+			LogConfig:        &config.Log,
+			RegisterIfNeeded: doReg,
+			SqlConfigs:       []string{"elzion/hebron", "elzion/jacob"},
+		})
+		if err != nil {
+			log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to Initialize Vault Parameters")
+		}
+		if resp != nil {
+			config.credentials = resp.Credentials
+			config.registered = resp.Registered
+		}
+		if config.credentials!=nil{
+			if config.credentials["elzion/hebron"] != nil && config.credentials["elzion/hebron"].Credentials!=nil{
+				bc, err := auth.HashPassword(config.credentials["elzion/hebron"].Credentials.Password)
+				if err != nil{
+					log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to hash password for hebron")
+				}
+				config.Users.HebronBCrypt = string(bc)
 			}
-			config.Users.UploadBCrypt = string(bc)
+			if config.credentials["elzion/jacob"] != nil && config.credentials["elzion/jacob"].Credentials!=nil{
+				bc, err := auth.HashPassword(config.credentials["elzion/jacob"].Credentials.Password)
+				if err != nil{
+					log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to hash password for jacob")
+				}
+				config.Users.UploadBCrypt = string(bc)
+			}
 		}
-	}
-	config.Http.Users = []*nechi.UserProfile{
-		&nechi.UserProfile{
-			Username: config.Users.HebronUser,
-			Password: config.Users.HebronBCrypt,
-			Scope:    config.Users.HebronPath,
-			Groups:   []string{"hebron"},
-			Modify:   false,
-		},
-		&nechi.UserProfile{
-			Username: config.Users.UploadUser,
-			Password: config.Users.UploadBCrypt,
-			Scope:    config.Users.UploadPath,
-			Groups:   []string{"jacob"},
-			Modify:   true,
-		},
-	}
+		config.Http.Users = []*nechi.UserProfile{
+			&nechi.UserProfile{
+				Username: config.Users.HebronUser,
+				Password: config.Users.HebronBCrypt,
+				Scope:    config.Users.HebronPath,
+				Groups:   []string{"hebron"},
+				Modify:   false,
+			},
+			&nechi.UserProfile{
+				Username: config.Users.UploadUser,
+				Password: config.Users.UploadBCrypt,
+				Scope:    config.Users.UploadPath,
+				Groups:   []string{"jacob"},
+				Modify:   true,
+			},
+		}
+	})
 	return app
 }
 
