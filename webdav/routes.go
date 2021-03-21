@@ -8,6 +8,7 @@ import (
 	"bitbucket.org/xhumiq/go-mclib/common"
 	"bitbucket.org/xhumiq/go-mclib/nechi"
 	"sync"
+	"time"
 )
 
 func init() {
@@ -20,12 +21,30 @@ var (
 
 func NewWebDavListener(srv *service) *nechi.WebChi {
 	app := nechi.NewWebApp(&srv.AppStatus, srv.AppConfig.Http, srv.keys)
+	cacheCfg := srv.SvcConfig.Caching
 	if  srv.SvcConfig.Monitor.AppMode != "MONITORONLY" {
-		ws, err := app.AddWebDav(srv.SvcConfig.Monitor.DAVPrefix, srv.AppConfig.Http)
-		if err!=nil{
-			panic(err)
-		}
-		ws.AuthUser(srv.VaultAuthUser)
+		vc, err := nechi.NewBetterMemCache(1 << 33)
+		checkError(err)
+		rc, err := nechi.NewBetterMemCache(1 << 24)
+		checkError(err)
+		ws, err := nechi.NewWebDavService(srv.SvcConfig.Monitor.DAVPrefix, srv.AppConfig.Http,
+			nechi.SetShortCacheClient(rc, time.Duration(cacheCfg.ShortTTLMins) * time.Minute),
+			nechi.SetAuthUser(srv.VaultAuthUser),
+			nechi.AddCachePatternFilter(nechi.CachePatternFilter{
+				Method:     "GET",
+				UrlPattern: nil,
+				UrlPrefix:  "/Video/",
+				Duration:   common.ToDurationPtr(2 * 24 * time.Hour),
+			}, vc, time.Duration(cacheCfg.VideoTTLMins) * time.Minute),
+			nechi.AddCachePatternFilter(nechi.CachePatternFilter{
+				Method:     "GET",
+				UrlPattern: nil,
+				UrlPrefix:  "/Audio/",
+				Duration:   common.ToDurationPtr(7 * 24 * time.Hour),
+			}, rc, time.Duration(cacheCfg.RecentTTLMins) * time.Minute),
+		)
+		checkError(err)
+		app.Use(ws.WebDavHandler)
 	}
 	app.ApiHealth("/healthcheck", HealthCheck)
 	return app

@@ -39,7 +39,7 @@ func main() {
 			Domain:           domain,
 			Policy:           "elzion",
 			Secret:           secrets.JwtSecret,
-			Config:           &config.Vault.VaultConfig,
+			Config:           &config.Vault,
 			SqlConfigs:       []string{"elzion/hebron", "elzion/jacob"},
 			LogConfig:        &config.Log,
 			RegisterIfNeeded: true,
@@ -89,7 +89,12 @@ func main() {
 			evt = evt.Str("User Hebron Usr", config.Users.HebronUser).
 				Str("User Hebron Pth", config.Users.HebronPath).
 				Str("User Upload Usr", config.Users.UploadUser).
-				Str("User Upload Pth", config.Users.UploadPath)
+				Str("User Upload Pth", config.Users.UploadPath).
+				Str("MaxCost Recent", config.Caching.RecentMaxBytes).
+				Str("MaxCost  Video", config.Caching.VideoMaxBytes).
+				Int("TTL Mins  Short", config.Caching.ShortTTLMins).
+				Int("TTL Mins Recent", config.Caching.RecentTTLMins).
+				Int("TTL Mins  Video", config.Caching.VideoTTLMins)
 
 			if config.Monitor.AppMode != "WEBDAVONLY" {
 				evt = evt.Int("Mon    Dur Mins", config.Monitor.DurMins).

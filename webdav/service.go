@@ -1,33 +1,33 @@
 package main
 
 import (
-	"bitbucket.org/xhumiq/go-mclib/auth"
 	"strings"
 	"time"
 
+	"bitbucket.org/xhumiq/go-mclib/auth"
 	authvault "bitbucket.org/xhumiq/go-mclib/auth/vault"
 
 	"github.com/rs/zerolog/log"
 
 	"bitbucket.org/xhumiq/go-mclib/common"
 
-	"github.com/pkg/errors"
 	"bitbucket.org/xhumiq/go-mclib/microservice"
+	"github.com/pkg/errors"
 )
 
 type service struct {
 	*microservice.App
-	SvcConfig   *AppConfig
-	chProc      chan (time.Time)
-	lastResults map[string]*webdavHealth
-	lastCheck   time.Time
-	vault       *authvault.VaultClient
-	keys        *auth.RsaKeys
+	SvcConfig     *AppConfig
+	chProc        chan (time.Time)
+	lastResults   map[string]*webdavHealth
+	lastCheck     time.Time
+	vault         *authvault.VaultClient
+	keys          *auth.RsaKeys
 }
 
 func NewService(app *microservice.App) *service {
 	config := app.Config.(*AppConfig)
-	client, err := authvault.NewVaultClient(config.Vault.VaultConfig)
+	client, err := authvault.NewVaultClient(config.Vault)
 	checkError(err)
 	env := authvault.GetEnv(&config.Log, config.Vault.Environment)
 	keys, err := client.CheckCurrentRole(env, config.Vault.HostName, "elzion", client.Config().Token)

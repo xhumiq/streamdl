@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"path/filepath"
+
 	"bitbucket.org/xhumiq/go-mclib/auth"
 	"bitbucket.org/xhumiq/go-mclib/auth/cognito"
 	authvault "bitbucket.org/xhumiq/go-mclib/auth/vault"
@@ -8,9 +11,7 @@ import (
 	"bitbucket.org/xhumiq/go-mclib/microservice"
 	"bitbucket.org/xhumiq/go-mclib/nechi"
 	"github.com/rs/zerolog/log"
-	"fmt"
 	"github.com/urfave/cli/v2"
-	"path/filepath"
 )
 
 type AppConfig struct {
@@ -18,10 +19,15 @@ type AppConfig struct {
 	Smtp    common.SmtpConfig
 	Log     common.LogConfig
 	Http    nechi.Config
-	Cognito cognito.Config
-	Vault   struct {
-		authvault.VaultConfig
+	Caching struct {
+		VideoTTLMins   int    `default:"30" env:"VIDEO_TTL_MINS" json:"VIDEO_TTL_MINS" yaml:"VIDEO_TTL_MINS"`
+		RecentTTLMins  int    `default:"30" env:"RECENT_TTL_MINS" json:"RECENT_TTL_MINS" yaml:"RECENT_TTL_MINS"`
+		ShortTTLMins   int    `default:"5" env:"SHORT_TTL_SECS" json:"SHORT_TTL_SECS" yaml:"SHORT_TTL_SECS"`
+		VideoMaxBytes  string `default:"1>>33" env:"VIDEO_MAX_BYTES" json:"VIDEO_MAX_BYTES" yaml:"VIDEO_MAX_BYTES"`
+		RecentMaxBytes string `default:"1>>23" env:"RECENT_MAX_BYTES" json:"RECENT_MAX_BYTES" yaml:"RECENT_MAX_BYTES"`
 	}
+	Cognito cognito.Config
+	Vault   authvault.VaultConfig
 	Monitor struct {
 		DAVPrefix  string `default:"" env:"WEBDAV_PREFIX" json:"WEBDAV_PREFIX" yaml:"WEBDAV_PREFIX"`
 		DurMins    int    `default:"10" env:"MON_DUR_MINS" json:"MON_DUR_MINS" yaml:"MON_DUR_MINS"`
@@ -52,7 +58,7 @@ func NewApp(name, display string) *microservice.App {
 				&cli.StringFlag{
 					Name:        "appmode",
 					Usage:       "--appmode [WEBDAVONLY,MONITORONLY]",
-					Aliases:     []string{"a"},
+					Aliases:     []string{"m"},
 					Destination: &c.Monitor.AppMode,
 				},
 				&cli.StringFlag{
@@ -82,14 +88,13 @@ func NewApp(name, display string) *microservice.App {
 				&cli.StringFlag{
 					Name:        "password",
 					Usage:       "--password 'rhema'",
-					Aliases:     []string{"p"},
 					Destination: &c.Users.HebronPwd,
 				},
 			}
 		}))
 	app.PreRunApp(func(app *microservice.App) {
 		config := app.Config.(*AppConfig)
-		if config.Http.Port < 25{
+		if config.Http.Port < 25 {
 			config.Http.Port = 80
 		}
 		if config.Service.Name == "" {
@@ -105,7 +110,7 @@ func NewApp(name, display string) *microservice.App {
 		if config.Vault.HostName == "" {
 			config.Vault.HostName = config.Service.Name
 		}
-		doReg := build.Command!="init"
+		doReg := build.Command != "init"
 		resp, err := authvault.InitConfig(authvault.InitConfigParams{
 			Env:              config.Log.Environment,
 			Name:             config.Vault.HostName,
@@ -113,7 +118,7 @@ func NewApp(name, display string) *microservice.App {
 			Path:             filepath.Dir(build.ExeBinPath),
 			Domain:           "ziongjcc.org",
 			Policy:           "elzion",
-			Config:           &config.Vault.VaultConfig,
+			Config:           &config.Vault,
 			LogConfig:        &config.Log,
 			RegisterIfNeeded: doReg,
 			SqlConfigs:       []string{"elzion/hebron", "elzion/jacob"},
@@ -125,17 +130,17 @@ func NewApp(name, display string) *microservice.App {
 			config.credentials = resp.Credentials
 			config.registered = resp.Registered
 		}
-		if config.credentials!=nil{
-			if config.credentials["elzion/hebron"] != nil && config.credentials["elzion/hebron"].Credentials!=nil{
+		if config.credentials != nil {
+			if config.credentials["elzion/hebron"] != nil && config.credentials["elzion/hebron"].Credentials != nil {
 				bc, err := auth.HashPassword(config.credentials["elzion/hebron"].Credentials.Password)
-				if err != nil{
+				if err != nil {
 					log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to hash password for hebron")
 				}
 				config.Users.HebronBCrypt = string(bc)
 			}
-			if config.credentials["elzion/jacob"] != nil && config.credentials["elzion/jacob"].Credentials!=nil{
+			if config.credentials["elzion/jacob"] != nil && config.credentials["elzion/jacob"].Credentials != nil {
 				bc, err := auth.HashPassword(config.credentials["elzion/jacob"].Credentials.Password)
-				if err != nil{
+				if err != nil {
 					log.Error().Str("Error", fmt.Sprintf("%+v", err)).Msgf("Unable to hash password for jacob")
 				}
 				config.Users.UploadBCrypt = string(bc)
