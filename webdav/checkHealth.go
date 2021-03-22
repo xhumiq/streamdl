@@ -36,7 +36,7 @@ func CheckHealth(url string, config *AppConfig) (res *webdavHealth, err error) {
 	}
 	t1 := time.Now()
 	var list []*api.DavFileInfo
-	if list, err = hc.NewRequest().DavListDirFiles(config.Monitor.VideoPath); err != nil {
+	if list, err = hc.DavListDirFiles(config.Monitor.VideoPath); err != nil {
 		return
 	}
 	for _, f := range list{
@@ -45,7 +45,7 @@ func CheckHealth(url string, config *AppConfig) (res *webdavHealth, err error) {
 	res.LatencyMiliSecs = time.Now().Sub(t1).Milliseconds()
 	res.TotalVideo = len(res.Videos)
 	ap := strings.Split(config.Monitor.AudioPaths, ",")
-	if list, err = hc.NewRequest().DavListDirFiles(ap[0]); err != nil {
+	if list, err = hc.DavListDirFiles(ap[0]); err != nil {
 		return
 	}
 	la := ""
@@ -80,7 +80,7 @@ func CheckSpeed(client *api.HttpClient, url string, maxSecs int, maxTries int) (
 	cnt := int64(0)
 	for i:= 0; i < maxTries; i++ {
 		t1 := time.Now()
-		if cnt, err = client.NewRequest().Get(url).Stream(ioutil.Discard); err != nil {
+		if cnt, err = client.Get(url).Stream(ioutil.Discard); err != nil {
 			return
 		}
 		println("File", url, withSuffix(cnt), time.Now().Sub(t1).String(), withSuffix(client.Metrics.LastDownloadRate))

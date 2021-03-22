@@ -7,7 +7,7 @@ require (
 	bitbucket.org/xhumiq/go-mclib/auth/vault v0.1.0 // indirect
 	bitbucket.org/xhumiq/go-mclib/common v0.1.0
 	bitbucket.org/xhumiq/go-mclib/microservice v0.1.0
-	bitbucket.org/xhumiq/go-mclib/nechi v0.1.0
+	github.com/cornelk/hashmap v1.0.1
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.19.0
 	github.com/urfave/cli/v2 v2.3.0

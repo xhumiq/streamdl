@@ -6,11 +6,10 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/xhumiq/go-mclib/common"
-
 	"bitbucket.org/xhumiq/go-mclib/api"
-
+	"bitbucket.org/xhumiq/go-mclib/common"
 	"bitbucket.org/xhumiq/go-mclib/microservice"
+	"github.com/cornelk/hashmap"
 	"github.com/pkg/errors"
 )
 
@@ -19,6 +18,7 @@ type service struct {
 	SvcConfig *AppConfig
 	lastCheck time.Time
 	client    *api.HttpClient
+	fileInfos hashmap.HashMap
 }
 
 func NewService(app *microservice.App) *service {
@@ -32,14 +32,23 @@ func NewService(app *microservice.App) *service {
 	}
 }
 
-func (s *service) ListFiles(path string) (err error) {
-	//t1 := time.Now()
-	var list []*api.DavFileInfo
-	if list, err = s.client.NewRequest().MultipleScansDavFileTree(6, path); err != nil {
+func (s *service) GetLatestFiles(days int, paths ...string) (list []*api.DavFileInfo, err error) {
+	if list, err = s.client.NewRequest().ScanDavFileTreePaths(6, paths...); err != nil {
 		return
 	}
-	list = filterFilesByRecency(list, -48*time.Hour)
-	PrintFileList(path, list)
+	if days < 0{
+		days = -days
+	}
+	if days > 0{
+		list = filterFilesByRecency(list, -time.Duration(days * 24) * time.Hour)
+	}
+	return
+}
+
+func (s *service) ListFiles(days int, paths ...string) (err error) {
+	var list []*api.DavFileInfo
+	list, err = s.GetLatestFiles(days, paths...)
+	PrintFileList(nil, list)
 	return
 }
 
@@ -96,18 +105,28 @@ func SortContentFiles(list []*api.DavFileInfo) {
 	})
 }
 
-func PrintFileList(parentPath string, list []*api.DavFileInfo) {
-	tf, ts := int64(0), int64(0)
-	for _, l := range list {
-		if l.IsDir() {
-			tf += l.TotalFiles
-			ts += l.TotalSize
-			continue
-		}
-		tf++
-		ts += l.Size()
+func PrintFileList(parent *api.DavFileInfo, list []*api.DavFileInfo) {
+	if parent == nil && len(list) == 1{
+		parent = list[0]
 	}
-	fmt.Printf("%s Total Files: %d Size: %s\n", parentPath, tf, common.AbbrvBytes(ts))
+	tf, ts := int64(0), int64(0)
+	name := ""
+	if parent==nil{
+		for _, l := range list {
+			if l.IsDir() {
+				tf += l.TotalFiles
+				ts += l.TotalSize
+				continue
+			}
+			tf++
+			ts += l.Size()
+		}
+	}else{
+		tf = parent.TotalFiles
+		ts = parent.TotalSize
+		name = parent.FullPath() + " "
+	}
+	fmt.Printf("%sTotal Files: %d Size: %s\n", name, tf, common.AbbrvBytes(ts))
 	for _, l := range list {
 		ftype := "DIR"
 		name := l.Name()
@@ -133,7 +152,7 @@ func PrintFileList(parentPath string, list []*api.DavFileInfo) {
 			continue
 		}
 		fmt.Printf("\n")
-		PrintFileList(l.FullPath(), l.Children)
+		PrintFileList(l, l.Children)
 	}
 }
 
