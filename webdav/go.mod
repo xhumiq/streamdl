@@ -10,8 +10,6 @@ require (
 	bitbucket.org/xhumiq/go-mclib/common v0.1.0
 	bitbucket.org/xhumiq/go-mclib/microservice v0.1.0
 	bitbucket.org/xhumiq/go-mclib/nechi v0.1.0
-	github.com/dgraph-io/ristretto v0.0.3
-	github.com/fatih/color v1.10.0 // indirect
 	github.com/judwhite/go-svc v1.1.2
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.19.0
