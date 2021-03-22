@@ -48,6 +48,7 @@ func (s *service) GetLatestFiles(days int, paths ...string) (list []*api.DavFile
 func (s *service) ListFiles(days int, paths ...string) (err error) {
 	var list []*api.DavFileInfo
 	list, err = s.GetLatestFiles(days, paths...)
+	fmt.Sprintf("%d", len(list))
 	PrintFileList(nil, list)
 	return
 }

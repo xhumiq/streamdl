@@ -14,31 +14,37 @@ const (
 
 func main() {
 	app := NewApp(appName, "DavCli Service")
-	days, path := 3, ""
-	app.Cmd("list [-d,--days <recency>] <paths>", func(c *cli.Context) error {
-		if path == ""{
-			path = "/"
-		}
-		app.ShowVersion()
-		s := NewService(app)
-		return s.ListFiles(days, common.FilterEmptyStrings(strings.Split(path, ",")...)...)
-	}, &days, &path)
-	app.Cmd("sync [-d,--days <recency>] <paths>", func(c *cli.Context) error {
-		if path == ""{
-			path = "/"
+	days, listpath := 3, ""
+	app.Cmd("list [-d,--days <recency>] <listpath>", func(c *cli.Context) error {
+		if listpath == ""{
+			listpath = "/"
 		}
 		app.ShowVersion()
 		s := NewService(app)
 		if days < 1{
 			days = 2
 		}
-		files, err := s.GetLatestFiles(days, common.FilterEmptyStrings(strings.Split(path, ",")...)...)
+		println("List Days", listpath)
+		s.ListFiles(days, common.FilterEmptyStrings(strings.Split(listpath, ",")...)...)
+		println("End")
+		return nil
+	}, &days, &listpath)
+	app.Cmd("sync [-d,--days <recency>] <paths>", func(c *cli.Context) error {
+		if listpath == ""{
+			listpath = "/"
+		}
+		app.ShowVersion()
+		s := NewService(app)
+		if days < 1{
+			days = 2
+		}
+		files, err := s.GetLatestFiles(days, common.FilterEmptyStrings(strings.Split(listpath, ",")...)...)
 		if err!=nil{
 			return err
 		}
-		basePath := "/tmp/zsf"
+		basePath := "$HOME/Videos/zsf"
 		return s.client.SaveFilesSD(6, basePath, files...)
-	}, &days, &path)
+	}, &days, &listpath)
 	err := app.Run(
 		microservice.RegisterShowVersion(func(app *microservice.App, evt *zerolog.Event) {
 			config := app.Config.(*AppConfig)
