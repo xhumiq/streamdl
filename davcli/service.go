@@ -23,7 +23,9 @@ type service struct {
 
 func NewService(app *microservice.App) *service {
 	cfg := app.Config.(*AppConfig)
-	hc, err := api.NewHttpClient(cfg.Download.Domain, api.AuthBasic(cfg.Download.HebronUser, cfg.Download.HebronPwd))
+	hc, err := api.NewHttpClient(cfg.Download.Domain,
+		api.SetHttpConfig(cfg.HttpClient),
+		api.AuthBasic(cfg.Download.HebronUser, cfg.Download.HebronPwd))
 	checkError(err)
 	return &service{
 		App:       app,
