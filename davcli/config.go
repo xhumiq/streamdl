@@ -4,6 +4,7 @@ import (
 	"bitbucket.org/xhumiq/go-mclib/common"
 	"bitbucket.org/xhumiq/go-mclib/microservice"
 	"bitbucket.org/xhumiq/go-mclib/storage"
+	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
 	"path/filepath"
 	"strings"
@@ -37,89 +38,39 @@ func NewApp(name, display string) *microservice.App {
 	app := microservice.NewApp(build, &secrets, &config, microservice.ConfigFlags(
 		func(config interface{}) []cli.Flag {
 			c := config.(*AppConfig)
-			return []cli.Flag{
-				&cli.StringFlag{
-					Name:        "domain",
-					Usage:       "--domain [jp,us]",
-					Aliases:     []string{"d"},
-					Destination: &c.Download.Domain,
-				},
-				&cli.StringFlag{
-					Name:        "video",
-					Usage:       "--video $USERPROFILE/Videos",
-					Aliases:     []string{"w"},
-					Destination: &c.Download.VideoPath,
-				},
-				&cli.StringFlag{
-					Name:        "audio",
-					Usage:       "--audio $USERPROFILE/Music",
-					Aliases:     []string{"a"},
-					Destination: &c.Download.AudioPath,
-				},
-				&cli.StringFlag{
-					Name:        "hymns",
-					Usage:       "--hymns $USERPROFILE/Music",
-					Destination: &c.Download.HymnsPath,
-				},
-				&cli.StringFlag{
-					Name:        "litcenter",
-					Usage:       "--litcenter $USERPROFILE/Documents",
-					Destination: &c.Download.DocsPath,
-				},
-				&cli.StringFlag{
-					Name:        "photos",
-					Usage:       "--photos $USERPROFILE/Pictures",
-					Destination: &c.Download.PhotosPath,
-				},
-				&cli.StringFlag{
-					Name:        "school",
-					Usage:       "--school $USERPROFILE/Documents",
-					Destination: &c.Download.SchoolPath,
-				},
-				&cli.StringFlag{
-					Name:        "user",
-					Usage:       "--user hebron",
-					Aliases:     []string{"u"},
-					Destination: &c.Download.HebronUser,
-				},
-				&cli.StringFlag{
-					Name:        "password",
-					Usage:       "--password 'rhema'",
-					Aliases:     []string{"p"},
-					Destination: &c.Download.HebronPwd,
-				},
-				&cli.StringFlag{
-					Name:        "base-path",
-					Usage:       "--base-path $USERPROFILE/Video",
-					Aliases:     []string{"b"},
-					Destination: &c.Download.BaseTargetPath,
-				},
-				&cli.StringFlag{
-					Name:        "secrets-path",
-					Usage:       "--secrets-path ./davdats",
-					Aliases:     []string{"s"},
-					Destination: &c.Download.VaultFile,
-				},
-				&cli.IntFlag{
-					Name:        "history-days",
-					Usage:       "--history-days 2",
-					Aliases:     []string{"y"},
-					Destination: &c.Download.HistoryDays,
-				},
-				&cli.IntFlag{
-					Name:        "download-threads",
-					Usage:       "--download-threads 6",
-					Aliases:     []string{"t"},
-					Destination: &c.Download.DownloadThreads,
-				},
-				&cli.BoolFlag{
-					Name:        "force-overwrite",
-					Usage:       "--force-overwrite",
-					Aliases:     []string{"f"},
-					Destination: &c.Download.ForceOverwrite,
-				},
-			}
-		}))
+			cf := microservice.CreateFlagOption
+			return microservice.CreateFlagsCheckErr(checkError,
+				cf("[-d,--domains <jp,us>]", &c.Download.Domain),
+				cf("[-w,--video $USERPROFILE/Videos/zsf]", &c.Download.VideoPath),
+				cf("[-a,--audio $USERPROFILE/Music/zsf]", &c.Download.AudioPath),
+				cf("[--hymns $USERPROFILE/Music]", &c.Download.HymnsPath),
+				cf("[--litcenter $USERPROFILE/Documents]", &c.Download.DocsPath),
+				cf("[--photos $USERPROFILE/Pictures]", &c.Download.PhotosPath),
+				cf("[--school $USERPROFILE/Documents]", &c.Download.SchoolPath),
+				cf("[-b,--base-path $USERPROFILE]", &c.Download.BaseTargetPath),
+				cf("[--secrets-path ./davdats", &c.Download.VaultFile),
+				cf("[-y,--history-days 2", &c.Download.HistoryDays),
+				cf("[-t,--download-threads 6]", &c.Download.DownloadThreads),
+				cf("[-f,--force-overwrite]", &c.Download.ForceOverwrite),
+			)
+		}), microservice.RegisterShowVersion(func(app *microservice.App, evt *zerolog.Event) {
+		config := app.Config.(*AppConfig)
+		evt.Str("WebDav UserName", config.Download.HebronUser).
+			Str("Sync    Base Path", storage.ConvertPathUNC(config.Download.BaseTargetPath)).
+			Str("Sync   Video Path", storage.ConvertPathUNC(config.Download.VideoPath)).
+			Str("Sync   Audio Path", storage.ConvertPathUNC(config.Download.AudioPath)).
+			Str("Sync   Hymns Path", storage.ConvertPathUNC(config.Download.HymnsPath)).
+			Str("Sync  Photos Path", storage.ConvertPathUNC(config.Download.PhotosPath)).
+			Str("Sync  School Path", storage.ConvertPathUNC(config.Download.SchoolPath)).
+			Str("Sync     Lit Path", storage.ConvertPathUNC(config.Download.DocsPath)).
+			Int("Sync History Days", config.Download.HistoryDays).
+			Int("Sync ---- Threads", config.Download.DownloadThreads).
+			Bool("Sync ForceReplace", config.Download.ForceOverwrite).
+			Str("WebDav   Domain", config.Download.Domain).
+			Str("WebDav Password", common.MaskedSecret(config.Download.HebronPwd)).
+			Str("Vault Path", storage.ConvertPathUNC(config.Download.VaultFile)).
+			Msgf("DavCli: %s", build.Version)
+	}))
 	app.Cli.Description = display
 	cfg := app.Config.(*AppConfig)
 	if cfg.HttpClient.MaxRetryCount < 4{
@@ -137,57 +88,23 @@ func NewApp(name, display string) *microservice.App {
 		if !strings.HasPrefix(domain, "http") {
 			domain = "https://" + domain
 		}
-		if config.Download.BaseTargetPath == ""{
-			config.Download.BaseTargetPath = "$USERPROFILE/Videos/zsf"
-		}
+		config.Download.Domain = domain
+		config.Download.BaseTargetPath = common.StringDefault(&config.Download.BaseTargetPath, "$USERPROFILE/Videos/zsf")
 		config.Download.BaseTargetPath = storage.ConvertUNCPath(config.Download.BaseTargetPath)
-		if config.Download.VideoPath == ""{
-			config.Download.VideoPath = config.Download.BaseTargetPath
-		}else{
-			config.Download.VideoPath = storage.ConvertToAbsPath(storage.ConvertUNCPath(config.Download.VideoPath),config.Download.BaseTargetPath)
-		}
-		if config.Download.AudioPath == ""{
-			config.Download.AudioPath = config.Download.BaseTargetPath
-		}else{
-			config.Download.AudioPath = storage.ConvertToAbsPath(storage.ConvertUNCPath(config.Download.AudioPath),config.Download.BaseTargetPath)
-		}
-		if config.Download.HymnsPath == ""{
-			config.Download.HymnsPath = config.Download.BaseTargetPath
-		}else{
-			config.Download.HymnsPath = storage.ConvertToAbsPath(storage.ConvertUNCPath(config.Download.HymnsPath),config.Download.BaseTargetPath)
-		}
-		if config.Download.PhotosPath == ""{
-			config.Download.PhotosPath = config.Download.BaseTargetPath
-		}else{
-			config.Download.PhotosPath = storage.ConvertToAbsPath(storage.ConvertUNCPath(config.Download.PhotosPath),config.Download.BaseTargetPath)
-		}
-		if config.Download.DocsPath == ""{
-			config.Download.DocsPath = config.Download.BaseTargetPath
-		}else{
-			config.Download.DocsPath = storage.ConvertToAbsPath(storage.ConvertUNCPath(config.Download.DocsPath),config.Download.BaseTargetPath)
-		}
-		if config.Download.SchoolPath == ""{
-			config.Download.SchoolPath = config.Download.BaseTargetPath
-		}else{
-			config.Download.SchoolPath = storage.ConvertToAbsPath(storage.ConvertUNCPath(config.Download.SchoolPath),config.Download.BaseTargetPath)
-		}
-
+		config.Download.VideoPath = storage.ConvertToAbsPath(config.Download.VideoPath,config.Download.BaseTargetPath)
+  	config.Download.AudioPath = storage.ConvertToAbsPath(config.Download.AudioPath,config.Download.BaseTargetPath)
+		config.Download.HymnsPath = storage.ConvertToAbsPath(config.Download.HymnsPath,config.Download.BaseTargetPath)
+		config.Download.PhotosPath = storage.ConvertToAbsPath(config.Download.PhotosPath,config.Download.BaseTargetPath)
+		config.Download.DocsPath = storage.ConvertToAbsPath(config.Download.DocsPath,config.Download.BaseTargetPath)
+		config.Download.SchoolPath = storage.ConvertToAbsPath(config.Download.SchoolPath,config.Download.BaseTargetPath)
 		dir := filepath.Dir(build.ExeBinPath)
 		config.Download.VaultFile = storage.ConvertToAbsPath(storage.ConvertUNCPath(config.Download.VaultFile),dir)
-
-		if config.Download.HistoryDays == 0{
-			config.Download.HistoryDays = 2
-		}
 		if config.Download.HistoryDays < 0{
 			config.Download.HistoryDays = -config.Download.HistoryDays
 		}
-		config.Download.Domain = domain
-		if config.Download.HebronUser == "" {
-			config.Download.HebronUser = sqlPwd
-		}
-		if config.Download.HebronPwd == "" {
-			config.Download.HebronPwd = awsKey
-		}
+		config.Download.HistoryDays = common.IntDefault(&config.Download.HistoryDays, 2)
+		config.Download.HebronUser = common.StringDefault(&config.Download.HebronUser, sqlPwd)
+		config.Download.HebronPwd = common.StringDefault(&config.Download.HebronPwd, awsKey)
 	})
 	return app
 }

@@ -10,7 +10,7 @@ PROJ_SQL_PWD = ${HEBRON_USER}
 AWS_SECRET_ACCESS_KEY = ${HEBRON_PASSWORD}
 PROJ_SMTP_PWD = ${ALERT_SMTP_PWD}
 
-BUILD_PATH = /c/ntc/builds/net
+BUILD_PATH = ${NET_BUILD}
 BUILD_FLAGS = "-s -X main.version=${BUILD_VERSION} -X main.sourceTag=${SOURCE_TAG} -X 'main.commitMsg=${COMMIT_MSG}' -X main.gitHash=${SOURCE_COMMIT} -X 'main.branch=${BRANCH}' -X main.buildStamp=${BUILD_TIME} -X 'main.awsKey=${AWS_SECRET_ACCESS_KEY}' -X 'main.sqlPwd=${PROJ_SQL_PWD}' -X 'main.smtpPwd=${PROJ_SMTP_PWD}' -X 'main.jwtSecret=${JWT_SECRET}'"
 
 all: build

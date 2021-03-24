@@ -7,11 +7,9 @@ import (
 
 	authvault "bitbucket.org/xhumiq/go-mclib/auth/vault"
 
-	"github.com/judwhite/go-svc/svc"
-	"github.com/rs/zerolog"
-	"github.com/urfave/cli/v2"
-	"bitbucket.org/xhumiq/go-mclib/common"
 	"bitbucket.org/xhumiq/go-mclib/microservice"
+	"github.com/judwhite/go-svc/svc"
+	"github.com/urfave/cli/v2"
 )
 
 const (
@@ -26,10 +24,10 @@ func main() {
 		if config.registered {
 			return nil
 		}
-		if name == ""{
+		if name == "" {
 			name = config.Vault.HostName
 		}
-		if name == ""{
+		if name == "" {
 			name = config.Service.Name
 		}
 		env = authvault.GetEnv(&config.Log, env, config.Vault.Environment)
@@ -84,57 +82,6 @@ func main() {
 		return nil
 	})
 	err := app.Run(
-		microservice.RegisterShowVersion(func(app *microservice.App, evt *zerolog.Event) {
-			config := app.Config.(*AppConfig)
-			evt = evt.Str("User Hebron Usr", config.Users.HebronUser).
-				Str("User Hebron Pth", config.Users.HebronPath).
-				Str("User Upload Usr", config.Users.UploadUser).
-				Str("User Upload Pth", config.Users.UploadPath).
-				Str("MaxCost Recent", config.Caching.RecentMaxBytes).
-				Str("MaxCost  Video", config.Caching.VideoMaxBytes).
-				Int("TTL Mins  Short", config.Caching.ShortTTLMins).
-				Int("TTL Mins Recent", config.Caching.RecentTTLMins).
-				Int("TTL Mins  Video", config.Caching.VideoTTLMins).
-				Int("CacheVideo  Dys", config.Caching.VideoFilterDays).
-				Int("CacheRecent Dys", config.Caching.RecentFilterDays)
-
-			if config.Monitor.AppMode != "WEBDAVONLY" {
-				evt = evt.Int("Mon    Dur Mins", config.Monitor.DurMins).
-					Str("Mon     Domains", config.Monitor.Domains).
-					Str("Mon  Video Path", config.Monitor.VideoPath).
-					Str("Mon  Audio Path", config.Monitor.AudioPaths)
-			}
-			if config.Monitor.AppMode != "MONITORONLY" {
-				evt = evt.Str("DAV Prefix", config.Monitor.DAVPrefix)
-			}
-			if config.Users.HebronPwd != "" {
-				evt = evt.Str("User Hebron Pwd", common.MaskedSecret(config.Users.HebronPwd)).
-					Str("User Upload Pwd", common.MaskedSecret(config.Users.UploadPwd))
-			}
-			if config.Users.HebronBCrypt != "" {
-				evt = evt.Str("User Hebron Hsh", common.MaskedSecret(config.Users.HebronBCrypt)).
-					Str("User Upload Hsh", common.MaskedSecret(config.Users.UploadBCrypt))
-			}
-			mode := config.Monitor.AppMode
-			if mode == "" {
-				mode = "WebDav and Monitor"
-			}
-			if config.Vault.Address != "" {
-				evt = evt.Str("Vault  Environ", config.Log.Environment).
-					Str("Vault  Address", config.Vault.Address).
-					Str("Vault HostName", config.Vault.HostName).
-					Str("Vault   Domain", config.Vault.Domain).
-					Str("Vault   Secret", common.MaskedSecret(config.Vault.CfgEncSecret)).
-					Str("Vault  CfgPath", config.Vault.ConfigPath)
-				if config.Vault.Token != "" {
-					evt = evt.Str("Vault    Token", common.MaskedSecret(config.Vault.Token))
-				}
-				if config.Vault.RegToken != "" {
-					evt = evt.Str("Vault RegToken", common.MaskedSecret(config.Vault.RegToken))
-				}
-			}
-			evt.Msgf("WebDav: %s Mode: %s", build.Version, mode)
-		}),
 		microservice.RegisterService(func(app *microservice.App) svc.Service {
 			s := NewService(app)
 			app.RegisterWebService(NewWebDavListener(s))

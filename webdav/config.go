@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/rs/zerolog"
 	"path/filepath"
 
 	"bitbucket.org/xhumiq/go-mclib/auth"
@@ -56,62 +57,63 @@ func NewApp(name, display string) *microservice.App {
 	app := microservice.NewApp(build, &secrets, &AppConfig{}, microservice.ConfigFlags(
 		func(config interface{}) []cli.Flag {
 			c := config.(*AppConfig)
-			return []cli.Flag{
-				&cli.StringFlag{
-					Name:        "appmode",
-					Usage:       "--appmode [WEBDAVONLY,MONITORONLY]",
-					Aliases:     []string{"m"},
-					Destination: &c.Monitor.AppMode,
-				},
-				&cli.StringFlag{
-					Name:        "domains",
-					Usage:       "--domains [jp,us]",
-					Aliases:     []string{"d"},
-					Destination: &c.Monitor.Domains,
-				},
-				&cli.StringFlag{
-					Name:        "video",
-					Usage:       "--video ./video",
-					Aliases:     []string{"w"},
-					Destination: &c.Monitor.VideoPath,
-				},
-				&cli.StringFlag{
-					Name:        "audio",
-					Usage:       "--audio ./audio",
-					Aliases:     []string{"a"},
-					Destination: &c.Monitor.AudioPaths,
-				},
-				&cli.StringFlag{
-					Name:        "user",
-					Usage:       "--user hebron",
-					Aliases:     []string{"u"},
-					Destination: &c.Users.HebronUser,
-				},
-				&cli.StringFlag{
-					Name:        "password",
-					Usage:       "--password 'rhema'",
-					Destination: &c.Users.HebronPwd,
-				},
+			cf := microservice.CreateFlagOption
+			return microservice.CreateFlagsCheckErr(checkError,
+				cf("[-m,--appmode <WEBDAVONLY,MONITORONLY>]", &c.Monitor.AppMode),
+				cf("[-d,--domains <jp,us>]", &c.Monitor.Domains),
+				cf("[-w,--video <./Video>]", &c.Monitor.VideoPath),
+				cf("[-a,--audio <./Audio>]", &c.Monitor.AudioPaths),
+				cf("[-u,--user <hebron>]", &c.Users.HebronUser),
+				cf("[-s,--password <rhema>]", &c.Users.HebronPwd),
+			)
+		}),
+		microservice.RegisterShowVersion(func(app *microservice.App, evt *zerolog.Event) {
+			config := app.Config.(*AppConfig)
+			evt = evt.Str("User Hebron Usr", config.Users.HebronUser).
+				Str("User Hebron Pth", config.Users.HebronPath).
+				Str("User Upload Usr", config.Users.UploadUser).
+				Str("User Upload Pth", config.Users.UploadPath).
+				Str("MaxCost Recent", config.Caching.RecentMaxBytes).
+				Str("MaxCost  Video", config.Caching.VideoMaxBytes).
+				Int("TTL Mins  Short", config.Caching.ShortTTLMins).
+				Int("TTL Mins Recent", config.Caching.RecentTTLMins).
+				Int("TTL Mins  Video", config.Caching.VideoTTLMins).
+				Int("CacheVideo  Dys", config.Caching.VideoFilterDays).
+				Int("CacheRecent Dys", config.Caching.RecentFilterDays)
+
+			if config.Monitor.AppMode != "WEBDAVONLY" {
+				evt = evt.Int("Mon    Dur Mins", config.Monitor.DurMins).
+					Str("Mon     Domains", config.Monitor.Domains).
+					Str("Mon  Video Path", config.Monitor.VideoPath).
+					Str("Mon  Audio Path", config.Monitor.AudioPaths)
 			}
+			if config.Monitor.AppMode != "MONITORONLY" {
+				evt = evt.Str("DAV Prefix", config.Monitor.DAVPrefix)
+			}
+			if config.Users.HebronPwd != "" {
+				evt = evt.Str("User Hebron Pwd", common.MaskedSecret(config.Users.HebronPwd)).
+					Str("User Upload Pwd", common.MaskedSecret(config.Users.UploadPwd))
+			}
+			if config.Users.HebronBCrypt != "" {
+				evt = evt.Str("User Hebron Hsh", common.MaskedSecret(config.Users.HebronBCrypt)).
+					Str("User Upload Hsh", common.MaskedSecret(config.Users.UploadBCrypt))
+			}
+			mode := config.Monitor.AppMode
+			if mode == "" {
+				mode = "WebDav and Monitor"
+			}
+			evt.Msgf("WebDav: %s Mode: %s", build.Version, mode)
 		}))
 	app.PreRunApp(func(app *microservice.App) {
 		config := app.Config.(*AppConfig)
 		if config.Http.Port < 25 {
 			config.Http.Port = 80
 		}
-		if config.Service.Name == "" {
-			config.Service.Name = name
-		}
+		config.Service.Name = common.StringDefault(&config.Service.Name, name)
 		config.Service.DisplayName = display
-		if config.Vault.Domain == "" {
-			config.Vault.Domain = "ziongjcc.org"
-		}
-		if config.Vault.DefaultPolicy == "" {
-			config.Vault.DefaultPolicy = "elzion"
-		}
-		if config.Vault.HostName == "" {
-			config.Vault.HostName = config.Service.Name
-		}
+		config.Vault.Domain = common.StringDefault(&config.Vault.Domain, "ziongjcc.org")
+		config.Vault.DefaultPolicy = common.StringDefault(&config.Vault.DefaultPolicy, "elzion")
+		config.Vault.HostName = common.StringDefault(&config.Vault.HostName, config.Service.Name)
 		doReg := build.Command != "init"
 		resp, err := authvault.InitConfig(authvault.InitConfigParams{
 			Env:              config.Log.Environment,
