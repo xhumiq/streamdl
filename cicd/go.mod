@@ -1,12 +1,9 @@
 module ntc.org/elzion/cicd
 
 require (
-	github.com/a8m/envsubst v1.1.0
 	github.com/go-chi/chi v4.0.2+incompatible
 	github.com/go-chi/render v1.0.1
 	github.com/judwhite/go-svc v1.1.2
-	github.com/kr/pretty v0.1.0 // indirect
-	github.com/libgit2/git2go/v30 v30.2.2
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.19.0
 	github.com/urfave/cli/v2 v2.1.1
@@ -24,7 +21,7 @@ replace (
 	bitbucket.org/xhumiq/go-mclib/common => ./../../mclib/common
 	bitbucket.org/xhumiq/go-mclib/logger/email => ./../../mclib/logger/email
 	bitbucket.org/xhumiq/go-mclib/logger/models => ./../../mclib/logger/models
-	bitbucket.org/xhumiq/go-mclib/logger/svctail => ./../../mclib/logger/svctail
+	bitbucket.org/xhumiq/go-mclib/logger/console => ./../../mclib/logger/console
 	bitbucket.org/xhumiq/go-mclib/logger/zerolog => ./../../mclib/logger/zerolog
 	bitbucket.org/xhumiq/go-mclib/microservice => ./../../mclib/microservice
 	bitbucket.org/xhumiq/go-mclib/nechi => ./../../mclib/nechi

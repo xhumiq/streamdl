@@ -24,7 +24,7 @@ replace (
 	bitbucket.org/xhumiq/go-mclib/common => ../../mclib/common
 	bitbucket.org/xhumiq/go-mclib/logger/email => ../../mclib/logger/email
 	bitbucket.org/xhumiq/go-mclib/logger/models => ../../mclib/logger/models
-	bitbucket.org/xhumiq/go-mclib/logger/svctail => ../../mclib/logger/svctail
+	bitbucket.org/xhumiq/go-mclib/logger/console => ../../mclib/logger/console
 	bitbucket.org/xhumiq/go-mclib/logger/zerolog => ../../mclib/logger/zerolog
 	bitbucket.org/xhumiq/go-mclib/microservice => ../../mclib/microservice
 	bitbucket.org/xhumiq/go-mclib/nechi => ../../mclib/nechi
