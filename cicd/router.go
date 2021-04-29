@@ -15,14 +15,14 @@ import (
 func NewApi(mgr *JobManager) *nechi.WebChi {
 	app := nechi.NewWebApp(&mgr.AppStatus, &mgr.SvcConfig.Http, nil)
 	app.ApiHealth("/healthcheck", HealthCheck)
-	app.GenericGet("/version", func(r *http.Request, w http.ResponseWriter) error {
+	app.Get("/version", func(r *http.Request, w http.ResponseWriter) error {
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		render.Status(r, 200)
 		status := GetStatus(mgr)
 		render.JSON(w, r, status)
 		return nil
 	})
-	app.GenericGet("/cert", func(r *http.Request, w http.ResponseWriter) error {
+	app.Get("/cert", func(r *http.Request, w http.ResponseWriter) error {
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 		render.Status(r, 200)
 		b, err := ioutil.ReadFile("/root/.ssh/id_rsa.pub") // just pass the file name
@@ -32,7 +32,7 @@ func NewApi(mgr *JobManager) *nechi.WebChi {
 		render.PlainText(w, r, string(b))
 		return nil
 	})
-	app.GenericGet("/jobs/{repo}/{branch}", func(r *http.Request, w http.ResponseWriter) error {
+	app.Get("/jobs/{repo}/{branch}", func(r *http.Request, w http.ResponseWriter) error {
 		resp := &ProcessStatus{
 			RepoName: strings.TrimSpace(chi.URLParam(r, "repo")),
 			Branch:   strings.TrimSpace(chi.URLParam(r, "branch")),
@@ -64,7 +64,7 @@ func NewApi(mgr *JobManager) *nechi.WebChi {
 		return nil
 	})
 
-	app.GenericPost("/jobs/{repo}/{branch}", func(r *http.Request, w http.ResponseWriter) error {
+	app.Post("/jobs/{repo}/{branch}", func(r *http.Request, w http.ResponseWriter) error {
 		resp := &ProcessStatus{
 			RepoName: strings.TrimSpace(chi.URLParam(r, "repo")),
 			Branch:   strings.TrimSpace(chi.URLParam(r, "branch")),
@@ -84,7 +84,7 @@ func NewApi(mgr *JobManager) *nechi.WebChi {
 		return nil
 	})
 
-	app.GenericPost("/events/bb/{repo}", func(r *http.Request, w http.ResponseWriter) error {
+	app.Post("/events/bb/{repo}", func(r *http.Request, w http.ResponseWriter) error {
 		println("Post Bitbucket Repo")
 		resp := &ProcessStatus{
 			RepoName: strings.TrimSpace(chi.URLParam(r, "repo")),
