@@ -1,5 +1,5 @@
-bitbucket.org/xhumiq/go-mclib/api v0.1.0 h1:1/YV6dfyxKhNRMrXA3jRNCIi6UlrVKJzmSQenWox3OA=
-bitbucket.org/xhumiq/go-mclib/api v0.1.0/go.mod h1:jNFTgES7GbIcB3vRh8Qb4kWfrULu9/GJrBm3zv4nKyE=
+bitbucket.org/xhumiq/go-mclib/api v0.1.0 h1:pczMMPTy5v7lgOL9KUo6yrDp6KD5Cr8X+kk9epXDdCc=
+bitbucket.org/xhumiq/go-mclib/api v0.1.0/go.mod h1:1s5BM7yL5RBnaAxFNXKjfxBLkBydezfF8HrrQTAW920=
 bitbucket.org/xhumiq/go-mclib/auth/jwt v0.1.0 h1:IFWyMAGMJDT00agmWk8nyrrikLi+qf+aWiQ2ibAe4+c=
 bitbucket.org/xhumiq/go-mclib/auth/jwt v0.1.0/go.mod h1:wB2XF4uMaU9yMFMCGzdlf0+MzKKo448149aeh7evmcs=
 github.com/AlekSi/pointer v1.0.0 h1:KWCWzsvFxNLcmM5XmiqHsGTTsuwZMsLFwWF9Y+//bNE=
@@ -122,6 +122,8 @@ github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
 github.com/kr/text v0.2.0/go.mod h1:eLer722TekiGuMkidMxC/pM04lWEeraHUUmBw8l2grE=
+github.com/lossdev/stack v1.0.3 h1:HtU5TUL+D+YmWbQT9BnVa2b+FY/hafZz5JNDW91dSEI=
+github.com/lossdev/stack v1.0.3/go.mod h1:hfhRy+k8UG39xygWSQwuguM4KGSxzM6rlgGFCJd2I+4=
 github.com/markbates/oncer v0.0.0-20181203154359-bf2de49a0be2/go.mod h1:Ld9puTsIW75CHf65OeIOkyKbteujpZVXDpWK6YGZbxE=
 github.com/markbates/safe v1.0.1/go.mod h1:nAqgmRi7cY2nqMc92/bSEeQA+R4OheNU2T1kNSCBdG0=
 github.com/mattn/go-runewidth v0.0.10 h1:CoZ3S2P7pvtP45xOtBw+/mDL2z0RKI576gSkzRRpdGg=
