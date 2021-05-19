@@ -14,7 +14,7 @@ all: build
 
 build:
 	export GOPRIVATE=bitbucket.org/xhumiq; \
-	go build -ldflags ${BUILD_FLAGS} -o ${BUILD_PATH}/streamdl
+	go build -ldflags ${BUILD_FLAGS} -o ${BUILD_PATH}/streamfile.exe
 
 install:
 	sudo cp ${BUILD_PATH}/streamdl /usr/local/bin

@@ -58,6 +58,8 @@ func execCommand(cmd *exec.Cmd, duration time.Duration) error{
 		log.Info().Msgf("Signal Interrupt")
 	case <-time.After(duration):
 		cmd.Process.Signal(os.Interrupt)
+		time.Sleep(2 * time.Second)
+		log.Info().Msgf("Recording Complete")
 	}
 	select {
 	case err := <-done:

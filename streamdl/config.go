@@ -12,22 +12,22 @@ import (
 
 type AppConfig struct {
 	Smtp   common.SmtpConfig
-	Log    common.LogConfig
+	Log    common.LogConfig  `json:"LOG" yaml:"log"`
 	Ffmpeg struct {
 		Bin        string `default:"" env:"FFMPEG_EXE" json:"FFMPEG_PATH" yaml:"bin"`
 		OutputPath string `default:"" env:"OUTPUT_PATH" json:"OUTPUT_PATH" yaml:"output"`
 		Options    string `default:"" env:"FFMPEG_OPTIONS" json:"FFMPEG_OPTIONS" yaml:"options"`
-	} `json:"ffmpeg" yaml:"ffmpeg"`
+	} `json:"FFMPEG" yaml:"ffmpeg"`
 	Target struct {
 		Site   string `default:"" env:"SITE" json:"TARGET_SITE" yaml:"site"`
 		Prefix string `default:"TV" env:"PREFIX" json:"TARGET_PREFIX" yaml:"prefix"`
-	} `json:"target" yaml:"target"`
+	} `json:"TARGET" yaml:"target"`
 	Recorder struct {
 		Bin      string `default:"youtube-dl" env:"RECORDER" json:"REC_DEFAULT_HOST" yaml:"bin"`
 		Options  string `default:"" env:"REC_OPTIONS" json:"REC_OPTIONS" yaml:"options"`
 		Minutes  int    `default:"70" env:"MINUTES" json:"REC_MINUTES" yaml:"minutes"`
 		TempPath string `default:"/tmp/streams" env:"TEMP_PATH" json:"TEMP_PATH" yaml:"tempPath"`
-	} `json:"recorder" yaml:"recorder"`
+	} `json:"RECORDER" yaml:"recorder"`
 }
 
 func NewApp(name, display string) *microservice.App {

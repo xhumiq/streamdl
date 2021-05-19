@@ -80,6 +80,7 @@ func main() {
 		checkError(err)
 		err = execCommand(cmd, time.Duration(config.Recorder.Minutes) * time.Minute)
 		checkError(err)
+		os.Remove(tf)
 		log.Info().Msgf("Completed download of stream -> %s", of)
 		return nil
 	}, &temp, &opath, &prefix, &mins, &ffmpeg, &rec, &fopts, &ropts, &force, &url)
