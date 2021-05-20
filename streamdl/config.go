@@ -2,6 +2,7 @@ package main
 
 import (
 	"bitbucket.org/xhumiq/go-mclib/storage"
+	"fmt"
 	"strings"
 
 	"github.com/rs/zerolog"
@@ -14,7 +15,7 @@ type AppConfig struct {
 	Smtp   common.SmtpConfig
 	Log    common.LogConfig  `json:"LOG" yaml:"log"`
 	Ffmpeg struct {
-		Bin        string `default:"" env:"FFMPEG_EXE" json:"FFMPEG_PATH" yaml:"bin"`
+		Bin        string `default:"ffmpeg" env:"FFMPEG_BIN" json:"FFMPEG_PATH" yaml:"bin"`
 		OutputPath string `default:"" env:"OUTPUT_PATH" json:"OUTPUT_PATH" yaml:"output"`
 		Options    string `default:"" env:"FFMPEG_OPTIONS" json:"FFMPEG_OPTIONS" yaml:"options"`
 	} `json:"FFMPEG" yaml:"ffmpeg"`
@@ -31,7 +32,7 @@ type AppConfig struct {
 }
 
 func NewApp(name, display string) *microservice.App {
-	app := microservice.NewApp(build, &secrets, &AppConfig{}, microservice.RegisterShowVersion(func(app *microservice.App, evt *zerolog.Event) {
+	app := microservice.NewApp(&build, &secrets, &AppConfig{}, microservice.RegisterShowVersion(func(app *microservice.App, evt *zerolog.Event) {
 		config := app.Config.(*AppConfig)
 		evt = evt.Str("Stream Url", config.Target.Site).
 			Str("FFMpeg     Bin", config.Ffmpeg.Bin).
@@ -42,6 +43,9 @@ func NewApp(name, display string) *microservice.App {
 			Str("Rec Options", config.Recorder.Options).
 			Int("TTL Mins Video", config.Recorder.Minutes).
 			Str("Temp Path", config.Recorder.TempPath)
+		for i, c := range build.ConfigFiles {
+			evt = evt.Str(fmt.Sprintf("CfgFile %d", i+1), c)
+		}
 		evt.Msgf("streamdl version: %s", build.Version)
 	}))
 	app.PreRunApp(func(app *microservice.App) {
@@ -109,7 +113,7 @@ var (
 )
 
 func init() {
-	build = *microservice.NewBuildInfo(version, gitHash, buildStamp, branch, sourceTag, cfgFile, commitMsg, appName)
+	build = *microservice.NewBuildInfo(version, gitHash, buildStamp, branch, sourceTag, cfgFile, commitMsg, appName, "ntc.org/netutils/streamdl")
 	secrets = microservice.SecretInfo{sqlPwd, smtpPwd, jwtSecret, awsKey}
 	chkError = microservice.CheckError(build.AppName)
 	checkError = microservice.CheckError(build.AppName)

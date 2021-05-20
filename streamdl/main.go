@@ -2,9 +2,7 @@ package main
 
 import (
 	"bitbucket.org/xhumiq/go-mclib/common"
-	"bitbucket.org/xhumiq/go-mclib/microservice"
 	"fmt"
-	"github.com/judwhite/go-svc/svc"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 	"os"
@@ -21,7 +19,7 @@ func main() {
 	url, temp, opath, prefix, mins := "", "", "", "", 0
 	ffmpeg, rec, fopts, ropts := "", "", "",  ""
 	force := false
-	app.Cmd("record [-t,--tempPath <file://c:/tmp/streams/>] [-o,--outputPath <file://d:/news/2021>] [-p,--prefix <FTV>] [-m,--minutes <70>] [-f,--ffmpeg-bin <\"C:\\app\\Media\\ffmpeg-3.4.1\\bin\\ffmpeg.exe\">] [-r,--recorder-bin <\"C:\\app\\utils\\youtube-dl.exe\">] [--ffmpeg-options <\"-err_detect ignore_err -c copy\">] [--rec-options <\"-f 96 %s -o -\">] [--force <force>] <url>", func(c *cli.Context) error {
+	app.Cmd("record [-t,--tempPath <file://c:/tmp/streams/>] [-o,--outputPath <file://d:/news/2021>] [-p,--prefix <FTV>] [-m,--minutes <70>] [-f,--ffmpeg-bin <\"C:\\app\\Media\\ffmpeg-3.4.1\\bin\\ffmpeg.exe\">] [-r,--recorder-bin <\"C:\\app\\utils\\youtube-dl.exe\">] [--ffmpeg-options <\"-err_detect ignore_err -c copy\">] [--rec-options <\"-f 96 <url> -o <out>\">] [--force <force>] <url>", func(c *cli.Context) error {
 		config := app.Config.(*AppConfig)
 		config.Target.Site = common.StringDefault(&url, config.Target.Site)
 		config.Target.Site = cleanUrl(config.Target.Site)
@@ -29,8 +27,8 @@ func main() {
 		config.Ffmpeg.OutputPath = common.StringDefault(&opath, config.Ffmpeg.OutputPath)
 		config.Target.Prefix = common.StringDefault(&prefix, config.Target.Prefix)
 		config.Recorder.Minutes = common.IntDefault(&mins, config.Recorder.Minutes)
-		config.Ffmpeg.Bin = common.StringDefault(&ffmpeg, config.Ffmpeg.Bin)
-		config.Recorder.Bin = common.StringDefault(&rec, config.Recorder.Bin)
+		config.Ffmpeg.Bin = common.FirstNotEmpty(ffmpeg, config.Ffmpeg.Bin, "ffmpeg")
+		config.Recorder.Bin = common.FirstNotEmpty(rec, config.Recorder.Bin, "youtube-dl")
 		config.Ffmpeg.Options = common.StringDefault(&fopts, config.Ffmpeg.Options)
 		config.Recorder.Options = common.StringDefault(&ropts, config.Recorder.Options)
 		if config.Target.Site == ""{
@@ -69,7 +67,6 @@ func main() {
 		err = execCommand(cmd, time.Duration(config.Recorder.Minutes) * time.Minute)
 		checkError(err)
 		if !common.FileExists(tf) && common.FileExists(tf + ".part"){
-			println("Rename data")
 			err = os.Rename(tf + ".part", tf)
 			checkError(err)
 		}
@@ -84,9 +81,6 @@ func main() {
 		log.Info().Msgf("Completed download of stream -> %s", of)
 		return nil
 	}, &temp, &opath, &prefix, &mins, &ffmpeg, &rec, &fopts, &ropts, &force, &url)
-	err := app.Run(
-		microservice.RegisterService(func(app *microservice.App) svc.Service {
-			return app
-		}))
+	err := app.Run()
 	checkError(err)
 }

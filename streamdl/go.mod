@@ -1,14 +1,11 @@
 module ntc.org/netutils/streamdl
 
 require (
-	bitbucket.org/xhumiq/go-mclib/auth/vault v0.1.0 // indirect
 	bitbucket.org/xhumiq/go-mclib/common v0.1.0
 	bitbucket.org/xhumiq/go-mclib/microservice v0.1.0
 	bitbucket.org/xhumiq/go-mclib/storage v0.1.0
-	github.com/judwhite/go-svc v1.1.2
-	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/rs/zerolog v1.19.0
-	github.com/urfave/cli/v2 v2.1.1
+	github.com/urfave/cli/v2 v2.3.0
 )
 
 go 1.16
