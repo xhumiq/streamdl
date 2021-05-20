@@ -19,7 +19,7 @@ type AppConfig struct {
 
 func NewApp(name, display string) *microservice.App {
 	config := AppConfig{}
-	app := microservice.NewApp(build, &secrets, &config, nil)
+	app := microservice.NewApp(&build, &secrets, &config, nil)
 	if config.Service.Name == "" {
 		config.Service.Name = name
 	}
@@ -46,7 +46,7 @@ var (
 )
 
 func init() {
-	build = *microservice.NewBuildInfo(version, gitHash, buildStamp, branch, sourceTag, cfgFile, commitMsg, appName)
+	build = *microservice.NewBuildInfo(version, gitHash, buildStamp, branch, sourceTag, cfgFile, commitMsg, appName, "ntc.org/netutils/monit")
 	secrets = microservice.SecretInfo{sqlPwd, smtpPwd, jwtSecret, awsKey}
 	chkError = microservice.CheckError(build.AppName)
 	checkError = microservice.CheckError(build.AppName)

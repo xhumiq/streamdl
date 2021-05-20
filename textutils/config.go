@@ -15,7 +15,7 @@ type AppConfig struct {
 
 func NewApp() *microservice.App {
 	config := AppConfig{}
-	app := microservice.NewApp(build, &secrets, &config, nil)
+	app := microservice.NewApp(&build, &secrets, &config, nil)
 	return app
 }
 
@@ -38,7 +38,7 @@ var (
 )
 
 func init() {
-	build = *microservice.NewBuildInfo(version, gitHash, buildStamp, branch, sourceTag, cfgFile, commitMsg, appName)
+	build = *microservice.NewBuildInfo(version, gitHash, buildStamp, branch, sourceTag, cfgFile, commitMsg, appName, "ntc.org/netutils/textutils")
 	secrets = microservice.SecretInfo{sqlPwd, smtpPwd, jwtSecret, awsKey}
 	chkError = microservice.CheckError(build.AppName)
 	checkError = microservice.CheckError(build.AppName)

@@ -1,10 +1,10 @@
 package main
 
 import (
-	"bitbucket.org/xhumiq/go-mclib/microservice"
-	"github.com/rs/zerolog/log"
 	"bitbucket.org/xhumiq/go-mclib/common"
+	"bitbucket.org/xhumiq/go-mclib/microservice"
 	"bitbucket.org/xhumiq/go-mclib/nechi"
+	"github.com/rs/zerolog/log"
 )
 
 type AppConfig struct {
@@ -51,7 +51,7 @@ func LogServiceInfo(config *AppConfig) {
 
 func NewApp(name, display string) *microservice.App {
 	config := AppConfig{}
-	app := microservice.NewApp(build, &secrets, &config, nil)
+	app := microservice.NewApp(&build, &secrets, &config, nil)
 	config.Service.Name = name
 	config.Service.DisplayName = display
 	return app
@@ -75,7 +75,7 @@ var (
 )
 
 func init() {
-	build = *microservice.NewBuildInfo(version, gitHash, buildStamp, branch, sourceTag, cfgFile, commitMsg, appName)
+	build = *microservice.NewBuildInfo(version, gitHash, buildStamp, branch, sourceTag, cfgFile, commitMsg, appName, "ntc.org/netutils/cicd")
 	secrets = microservice.SecretInfo{sqlPwd, smtpPwd, jwtSecret, awsSecret}
 	checkError = microservice.CheckError(build.AppName)
 }
