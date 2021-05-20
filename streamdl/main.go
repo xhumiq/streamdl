@@ -16,16 +16,17 @@ const (
 
 func main() {
 	app := NewApp(appName, "Stream Downloader")
-	url, temp, opath, prefix, mins := "", "", "", "", 0
+	url, temp, opath, prefix, dprefix, mins := "", "", "", "", "", 0
 	ffmpeg, rec, fopts, ropts := "", "", "",  ""
 	force := false
 	app.Cmd("record [-t,--tempPath <file://c:/tmp/streams/>] [-o,--outputPath <file://d:/news/2021>] [-p,--prefix <FTV>] [-m,--minutes <70>] [-f,--ffmpeg-bin <\"C:\\app\\Media\\ffmpeg-3.4.1\\bin\\ffmpeg.exe\">] [-r,--recorder-bin <\"C:\\app\\utils\\youtube-dl.exe\">] [--ffmpeg-options <\"-err_detect ignore_err -c copy\">] [--rec-options <\"-f 96 <url> -o <out>\">] [--force <force>] <url>", func(c *cli.Context) error {
 		config := app.Config.(*AppConfig)
 		config.Target.Site = common.StringDefault(&url, config.Target.Site)
-		config.Target.Site = cleanUrl(config.Target.Site)
+		config.Target.Site, dprefix = cleanUrl(config.YouTubeIds, config.Target.Site)
+		config.Target.Prefix = common.FirstNotEmpty(prefix, config.Target.Prefix, dprefix)
+		println("Prefix", dprefix, config.Target.Prefix)
 		config.Recorder.TempPath = common.StringDefault(&temp, config.Recorder.TempPath)
 		config.Ffmpeg.OutputPath = common.StringDefault(&opath, config.Ffmpeg.OutputPath)
-		config.Target.Prefix = common.StringDefault(&prefix, config.Target.Prefix)
 		config.Recorder.Minutes = common.IntDefault(&mins, config.Recorder.Minutes)
 		config.Ffmpeg.Bin = common.FirstNotEmpty(ffmpeg, config.Ffmpeg.Bin, "ffmpeg")
 		config.Recorder.Bin = common.FirstNotEmpty(rec, config.Recorder.Bin, "youtube-dl")

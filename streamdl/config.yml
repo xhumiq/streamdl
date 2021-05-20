@@ -1,0 +1,15 @@
+log:
+  level: debug
+  path: /ntc/logs/$NP
+recorder:
+  bin: youtube-dl
+  tempPath: /tmp/streams
+ffmpeg:
+  bin: ffmpeg
+  output: /ntc/tmp/$NP/$YY
+tubes:
+  ftv: XxJKnDLYZz4
+  ctv: RDipMAPo58gvY
+#  crontab -e
+#  MM HH * * * /usr/lib/streamdl/v0.2.1/streamdl --config <file> record -m <mins> <id>
+#  55 23 * * * /usr/lib/streamdl/v0.2.1/streamdl --config /etc/streamdl/config.yml record -m 90 FTV

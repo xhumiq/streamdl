@@ -9,6 +9,7 @@ BUILD_PATH = /ntc/builds/net
 BUILD_FLAGS = "-s -X main.version=${BUILD_VERSION} -X main.sourceTag=${SOURCE_TAG} -X 'main.commitMsg=${COMMIT_MSG}' -X main.gitHash=${SOURCE_COMMIT} -X 'main.branch=${BRANCH}' -X main.buildStamp=${BUILD_TIME} -X 'main.sqlPwd=${PROJ_SQL_PWD}' -X 'main.smtpPwd=${PROJ_SMTP_PWD}'"
 CGO_ENABLED = 0
 GOPRIVATE=bitbucket.org/xhumiq
+DEPLOY_VER = v0.2.1
 
 all: build
 
@@ -17,4 +18,21 @@ build:
 	go build -ldflags ${BUILD_FLAGS} -o ${BUILD_PATH}/streamdl
 
 install:
-	sudo cp ${BUILD_PATH}/streamdl /usr/local/bin
+	cd /tmp; \
+	rm -r /tmp/streamdl; \
+	wget https://github.com/xhumiq/streamdl/releases/download/${DEPLOY_VER}/streamdl; \
+	wget https://github.com/xhumiq/streamdl/releases/download/${DEPLOY_VER}/config.yml; \
+	sudo mkdir -p /usr/lib/streamdl/${DEPLOY_VER}; \
+	sudo cp /tmp/streamdl /usr/lib/streamdl/${DEPLOY_VER}/; \
+	sudo rm -r /usr/bin/streamdl; \
+	sudo ln -s /usr/lib/streamdl/${DEPLOY_VER}/streamdl /usr/bin/streamdl; \
+	sudo mkdir -p /etc/streamdl; \
+	sudo cp /tmp/config.yml /etc/streamdl/config.yml
+
+arch_deps:
+	sudo pacman -Syuuu
+	sudo pacman -S ffmpeg youtube-dl
+
+ubu_deps:
+	sudo apt -y update
+	sudo apt -y install ffmpeg youtube-dl
