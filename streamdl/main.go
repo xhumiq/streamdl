@@ -2,11 +2,13 @@ package main
 
 import (
 	"bitbucket.org/xhumiq/go-mclib/common"
+	"bitbucket.org/xhumiq/go-mclib/microservice"
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -24,7 +26,6 @@ func main() {
 		config.Target.Site = common.StringDefault(&url, config.Target.Site)
 		config.Target.Site, dprefix = cleanUrl(config.YouTubeIds, config.Target.Site)
 		config.Target.Prefix = common.FirstNotEmpty(prefix, config.Target.Prefix, dprefix)
-		println("Prefix", dprefix, config.Target.Prefix)
 		config.Recorder.TempPath = common.StringDefault(&temp, config.Recorder.TempPath)
 		config.Ffmpeg.OutputPath = common.StringDefault(&opath, config.Ffmpeg.OutputPath)
 		config.Recorder.Minutes = common.IntDefault(&mins, config.Recorder.Minutes)
@@ -59,7 +60,12 @@ func main() {
 		if config.Recorder.Options == ""{
 			return fmt.Errorf("Recorder Options is not specified")
 		}
+		config.Ffmpeg.OutputPath = strings.Replace(config.Ffmpeg.OutputPath, "$NP", config.Target.Prefix, -1)
+		config.Log.LogPath = strings.Replace(config.Log.LogPath, "$NP", config.Target.Prefix, -1)
+		config.Log.FileName = config.Target.Prefix
+		config.Log.FilePrefix = config.Target.Prefix
 		app.ShowVersion()
+		microservice.InitLog(app.Build.AppName, &config.Log, &config.Smtp)
 		tp := common.ConvertUNCPath(config.Recorder.TempPath)
 		tf := filepath.Join(tp, createFileName(config.Target.Prefix, "tmp"))
 		rb := common.ConvertUNCPath(config.Recorder.Bin)

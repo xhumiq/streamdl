@@ -1,15 +1,27 @@
 log:
   level: debug
-  path: /ntc/logs/$NP
+  path: /var/streamdl/logs/$NP
 recorder:
   bin: youtube-dl
   tempPath: /tmp/streams
 ffmpeg:
   bin: ffmpeg
-  output: /ntc/tmp/$NP/$YY
+  output: /var/streamdl/videos/$NP/$YY
 tubes:
   ftv: XxJKnDLYZz4
   ctv: RDipMAPo58gvY
 #  crontab -e
 #  MM HH * * * /usr/lib/streamdl/v0.2.1/streamdl --config <file> record -m <mins> <id>
-#  55 23 * * * /usr/lib/streamdl/v0.2.1/streamdl --config /etc/streamdl/config.yml record -m 90 FTV
+
+# 25 11 * * * viduser /usr/lib/streamdl/v0.2.1/streamdl record -m 35 FTV
+# 25 16 * * * viduser /usr/lib/streamdl/v0.2.1/streamdl record -m 35 FTV
+# 25 17 * * * viduser /usr/lib/streamdl/v0.2.1/streamdl record -m 35 FTV
+# 55 18 * * * viduser /usr/lib/streamdl/v0.2.1/streamdl record -m 65 FTV
+# 55 19 * * * viduser /usr/lib/streamdl/v0.2.1/streamdl record -m 70 FTV
+# 50 21 * * * viduser /usr/lib/streamdl/v0.2.1/streamdl record -m 75 FTV
+# 50 23 * * * viduser /usr/lib/streamdl/v0.2.1/streamdl record -m 85 FTV
+
+# 50 11 * * * viduser /usr/lib/streamdl/v0.2.1/streamdl record -m 70 TTV
+# 55 17 * * * viduser /usr/lib/streamdl/v0.2.1/streamdl record -m 70 TTV
+# 55 11 * * * viduser /usr/lib/streamdl/v0.2.1/streamdl record -m 65 CTS
+# 55 18 * * * viduser /usr/lib/streamdl/v0.2.1/streamdl record -m 70 CTS

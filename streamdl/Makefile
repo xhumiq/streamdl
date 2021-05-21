@@ -23,11 +23,19 @@ install:
 	wget https://github.com/xhumiq/streamdl/releases/download/${DEPLOY_VER}/streamdl; \
 	wget https://github.com/xhumiq/streamdl/releases/download/${DEPLOY_VER}/config.yml; \
 	sudo mkdir -p /usr/lib/streamdl/${DEPLOY_VER}; \
+	sudo chmod +x /tmp/streamdl; \
 	sudo cp /tmp/streamdl /usr/lib/streamdl/${DEPLOY_VER}/; \
 	sudo rm -r /usr/bin/streamdl; \
 	sudo ln -s /usr/lib/streamdl/${DEPLOY_VER}/streamdl /usr/bin/streamdl; \
 	sudo mkdir -p /etc/streamdl; \
-	sudo cp /tmp/config.yml /etc/streamdl/config.yml
+	sudo cp /tmp/config.yml /etc/streamdl/config.yml; \
+	sudo mkdir -p /var/streamdl; \
+	#sudo mount -t ext4 /dev/sdb1 /var/streamdl; \
+	sudo chown -R mchu:mchu /var/streamdl; \
+	sudo mkdir -p /var/streamdl/videos; \
+	sudo mkdir -p /var/streamdl/log; \
+	sudo mkdir -p /var/streamdl/tmp; \
+
 
 arch_deps:
 	sudo pacman -Syuuu

@@ -68,7 +68,7 @@ func NewApp(name, display string) *microservice.App {
 			config.Log.LogPath = strings.Replace(config.Log.LogPath, "$YY", nd[2:4], -1)
 			config.Log.LogPath = strings.Replace(config.Log.LogPath, "$MM", nd[4:6], -1)
 			config.Log.LogPath = strings.Replace(config.Log.LogPath, "$DD", nd[6:8], -1)
-			config.Log.LogPath = strings.Replace(config.Log.LogPath, "$NP", config.Target.Prefix, -1)
+			//config.Log.LogPath = strings.Replace(config.Log.LogPath, "$NP", config.Target.Prefix, -1)
 		}
 		if config.Ffmpeg.OutputPath != ""{
 			config.Ffmpeg.OutputPath = storage.ConvertPathUNC(config.Ffmpeg.OutputPath)
@@ -77,7 +77,7 @@ func NewApp(name, display string) *microservice.App {
 			config.Ffmpeg.OutputPath = strings.Replace(config.Ffmpeg.OutputPath, "$YY", nd[2:4], -1)
 			config.Ffmpeg.OutputPath = strings.Replace(config.Ffmpeg.OutputPath, "$MM", nd[4:6], -1)
 			config.Ffmpeg.OutputPath = strings.Replace(config.Ffmpeg.OutputPath, "$DD", nd[6:8], -1)
-			config.Ffmpeg.OutputPath = strings.Replace(config.Ffmpeg.OutputPath, "$NP", config.Target.Prefix, -1)
+			//config.Ffmpeg.OutputPath = strings.Replace(config.Ffmpeg.OutputPath, "$NP", config.Target.Prefix, -1)
 		}
 		config.Recorder.Bin = common.StringDefault(&config.Recorder.Bin, DEF_REC_BIN)
 		if config.Recorder.Bin != ""{
